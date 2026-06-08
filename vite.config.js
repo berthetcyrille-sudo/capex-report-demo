@@ -1,7 +1,0 @@
-{
-  "name": "capex-report-demo",
-  "private": true,
-  "scripts": { "dev": "vite", "build": "vite build", "preview": "vite preview" },
-  "dependencies": { "react": "^18", "react-dom": "^18" },
-  "devDependencies": { "vite": "^5", "@vitejs/plugin-react": "^4" }
-}
