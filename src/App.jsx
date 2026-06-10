@@ -56,7 +56,7 @@ const CAPEX_DATA = [
     os:[{id:"os084",label:"Isolation combles + remplacement fenêtres", montant:120000,facture:60000, statut:"cours"}]},
 ];
 
-const SEP = "1px solid #d0d8e8"; // séparateur discret entre groupes d'années
+const TIPS = {
   ne:       "Reporter sur 2026 le budget qui n'a pas fait l'objet d'OS : NE = B1 − E. Nécessite validation DAF.",
   far:      "Reporter sur 2026 les Factures À Recevoir sur OS émis : FAR = E − F. Ces sommes sont juridiquement engagées.",
   nf:       "Reporter sur 2026 le budget non facturé : NF = B1 − F. Inclut les FAR et le non engagé.",
