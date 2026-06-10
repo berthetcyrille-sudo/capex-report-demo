@@ -307,9 +307,9 @@ export default function App() {
 
   // Cellule éditable (révisé N+2..N+5)
   const EditCell = ({id, col, initVal, bbot}) => {
-    const isEdit     = editing?.id===id && editing?.col===col;
+    const isEdit      = editing?.id===id && editing?.col===col;
     const hasOverride = overrides[id]?.[col] !== undefined;
-    const val        = hasOverride ? overrides[id][col] : null;
+    const val         = hasOverride ? overrides[id][col] : null;
     return (
       <td style={{ padding:"4px 8px", borderBottom:bbot, textAlign:"right", verticalAlign:"middle",
         background: hasOverride ? "#fffbe0" : "#fafaf8", cursor:"pointer", fontSize:13 }}
@@ -347,14 +347,16 @@ export default function App() {
       })()}
 
       <style>{`
-        .capex-table thead th { position: sticky; z-index: 10; }
-        .capex-table thead tr:nth-child(1) th { top: 0; }
-        .capex-table thead tr:nth-child(2) th { top: 36px; }
-        .capex-table thead tr:nth-child(3) th { top: 72px; }
-        .capex-table tfoot tr td, .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
+        .capex-table { border-collapse: separate; border-spacing: 0; }
+        .capex-table td, .capex-table th { border-bottom: 0.5px solid #eee; }
+        .capex-table thead tr:nth-child(1) tr { position: sticky; top: 0; z-index: 20; }
+        .capex-table thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 20; }
+        .capex-table thead tr:nth-child(2) th { position: sticky; top: 33px; z-index: 20; }
+        .capex-table thead tr:nth-child(3) th { position: sticky; top: 66px; z-index: 20; }
+        .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
-        <table className="capex-table" style={{ width:"100%", borderCollapse:"collapse", fontSize:13, minWidth:1800 }}>
+        <table className="capex-table" style={{ width:"100%", fontSize:13, minWidth:1800 }}>
           <thead>
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
