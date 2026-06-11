@@ -10,6 +10,10 @@ const CAPEX_DATA = [
     B1:1400000, B2:400000,  B3:0,       B4:0,       B5:0,       B6:0,
     os:[{id:"os041",label:"Dépose PAC + désamiantage",               montant:240000,facture:240000,statut:"solde"},
         {id:"os058",label:"Fourniture et pose PAC + GRS",             montant:740000,facture:500000,statut:"cours"}]},
+  { id:"etudes", label:"Études préalables — restructuration R+3",    sub:"Maîtrise d'œuvre · Études",      type:"DEV",
+    budget:0,       os_total:0,      facture:0,
+    B1:180000,  B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
+    os:[]},
   { id:"facade", label:"Ravalement façades",                 sub:"Enveloppe · Gros œuvre",         type:"DEV",
     budget:900000,  os_total:900000, facture:510000,
     B1:1200000, B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
@@ -57,7 +61,7 @@ const CAPEX_DATA = [
 ];
 
 const TIPS = {
-  ne:       "Reporter sur 2026 le budget qui n'a pas fait l'objet d'OS : NE = B1 − E. Nécessite validation DAF.",
+  full:     "Reporter l'intégralité du budget 2026 sur 2027. Disponible uniquement si aucun OS n'a été ouvert sur cette opération.",
   far:      "Reporter sur 2026 les Factures À Recevoir sur OS émis : FAR = E − F. Ces sommes sont juridiquement engagées.",
   nf:       "Reporter sur 2026 le budget non facturé : NF = B1 − F. Inclut les FAR et le non engagé.",
   manu:     "Reporter sur 2026 un montant saisi manuellement. Utile pour un arbitrage partiel.",
@@ -188,7 +192,7 @@ function InputRowConserve({ facture, budget, onApply }) {
 }
 
 // ─── Menu contextuel actif ───────────────────────────────────────────────────
-function CtxMenu({ a, reports, setReports, toast }) {
+function CtxMenu({ a, reports, setReports, setOverrides, toast }) {
   const [open, setOpen]               = useState(false);
   const [showManu, setShowManu]       = useState(false);
   const [showConserve, setShowConserve] = useState(false);
@@ -197,20 +201,47 @@ function CtxMenu({ a, reports, setReports, toast }) {
   const far = calcTfar(a);
   const nf  = calcNF(a);
   const bmf = calcBmf(a); // plafond saisie manuelle
-  const hasReport = reports[a.id]?.report>0 || a.os.some(o=>reports[o.id]?.report>0);
+  const hasReport = reports[a.id]?.report>0 || a.os.some(o=>reports[o.id]?.report>0) || false;
 
   const apply = (type, val) => {
     setOpen(false); setShowManu(false); setShowConserve(false);
-    setReports(prev => {
+
+    // Validation préalable
+    if (type==="manu" && (val<=0||val>bmf)) { toast(`Montant invalide. Max : ${fmt(bmf)}.`,"err"); return; }
+    if (type==="conserve") { const r=Math.max(0,a.budget-a.facture-val); if(!r){ toast(`Solde = 0.`,"warning"); return; } }
+
+    // Effacer le override B1rev
+    setOverrides(prev => {
       const next = {...prev};
-      if (type==="ne")      { next[a.id]={report:ne, rt:"ne"};   toast(`${a.label} — ${fmt(ne)} (non engagé) reportés.`,"warning"); }
-      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0)next[o.id]={report:calcFar(o),rt:"report"};}); next[a.id]={...(next[a.id]||{}),rt:"far"}; toast(`${a.label} — ${fmt(far)} de FAR reportés.`,"info"); }
-      if (type==="nf")      { next[a.id]={report:nf, rt:"nf"};   toast(`${a.label} — ${fmt(nf)} (budget non facturé) reportés.`,"info"); }
-      if (type==="manu")    { if(val<=0||val>bmf){toast(`Montant invalide. Max : ${fmt(bmf)}.`,"err");return prev;} next[a.id]={report:val,rt:"manu"}; toast(`${a.label} — ${fmt(val)} saisis.`,"info"); }
-      if (type==="conserve"){ const r=Math.max(0,a.budget-a.facture-val); if(!r){toast(`Solde = 0.`,"warning");return prev;} next[a.id]={report:r,rt:"conserve"}; toast(`${a.label} — ${fmt(val)} conservés, ${fmt(r)} reportés.`,"info"); }
-      if (type==="reset")   { delete next[a.id]; a.os.forEach(o=>delete next[o.id]); toast(`${a.label} — report annulé.`,"info"); }
+      if (next[a.id]?.B1rev !== undefined) {
+        const {B1rev, ...rest} = next[a.id];
+        if (Object.keys(rest).length) next[a.id] = rest;
+        else delete next[a.id];
+      }
       return next;
     });
+
+    // Appliquer le report
+    setReports(prev => {
+      const next = {...prev};
+      if (type==="full")     { next[a.id]={report:a.B1, rt:"full"}; }
+      if (type==="ne")      { next[a.id]={report:ne, rt:"ne"}; }
+      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0)next[o.id]={report:calcFar(o),rt:"report"};}); next[a.id]={...(next[a.id]||{}),rt:"far"}; }
+      if (type==="nf")      { next[a.id]={report:nf, rt:"nf"}; }
+      if (type==="manu")    { next[a.id]={report:val,rt:"manu"}; }
+      if (type==="conserve"){ const r=Math.max(0,a.budget-a.facture-val); next[a.id]={report:r,rt:"conserve"}; }
+      if (type==="reset")   { delete next[a.id]; a.os.forEach(o=>delete next[o.id]); }
+      return next;
+    });
+
+    // Toasts hors updater
+    if (type==="full")     toast(`${a.label} — budget complet ${fmt(a.B1)} reporté sur ${AN(1)}.`,"info");
+    if (type==="ne")       toast(`${a.label} — ${fmt(ne)} (non engagé) reportés.`,"warning");
+    if (type==="far")      toast(`${a.label} — ${fmt(far)} de FAR reportés.`,"info");
+    if (type==="nf")       toast(`${a.label} — ${fmt(nf)} reportés.`,"info");
+    if (type==="manu")     toast(`${a.label} — ${fmt(val)} saisis.`,"info");
+    if (type==="conserve") { const r=Math.max(0,a.budget-a.facture-val); toast(`${a.label} — ${fmt(val)} conservés, ${fmt(r)} reportés.`,"info"); }
+    if (type==="reset")    toast(`${a.label} — report annulé.`,"info");
   };
 
   return (
@@ -229,17 +260,41 @@ function CtxMenu({ a, reports, setReports, toast }) {
             <div style={{ fontSize:11, fontWeight:600, color:"#555", padding:"6px 12px 4px", borderTop:"0.5px solid #eee" }}>
               Reporter sur 2026 :
             </div>
-            {ne>0  && <CtxItem label={`Budget sans OS — NE (${fmt(ne)})`}            tipKey="ne"  onClick={()=>apply("ne")} />}
-            {far>0 && <CtxItem label={`FAR sur OS émis — E−F (${fmt(far)})`}         tipKey="far" onClick={()=>apply("far")} />}
-            {nf>0  && <CtxItem label={`Budget non facturé — NF=B1−F (${fmt(nf)})`}   tipKey="nf"  onClick={()=>apply("nf")} />}
-            {bmf>0 && <>
-              <CtxItem label="Montant saisi manuellement" tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
-              {showManu && <InputRow label={`Montant à reporter (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
-            </>}
+            {/* Report complet — grisé si OS ouverts */}
+            <div style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"7px 12px",
+              fontSize:12, opacity: a.os_total>0 ? 0.4 : 1,
+              cursor: a.os_total>0 ? "not-allowed" : "pointer",
+              color: a.os_total>0 ? "#999" : "inherit" }}
+              onClick={()=>{ if(a.os_total===0) apply("full"); }}
+              onMouseEnter={e=>{ if(a.os_total===0) e.currentTarget.style.background="#f5f5f3"; }}
+              onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <div style={{ flex:1, fontWeight:500, lineHeight:1.3 }}>
+                Report complet du budget {AN(0)} sur {AN(1)} ({fmt(a.B1)})
+                {a.os_total>0 && <div style={{fontSize:10,color:"#bbb",fontWeight:400}}>Non disponible — OS ouverts sur cette opération</div>}
+              </div>
+              <Tooltip text={TIPS["full"]} />
+            </div>
             <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
-            {bmf>0 && <>
-              <CtxItem label="Saisir le budget complémentaire à conserver et reporter le solde" tipKey="conserve" onClick={()=>setShowConserve(s=>!s)} />
-              {showConserve && <InputRowConserve facture={a.facture} budget={a.budget} onApply={v=>apply("conserve",v)} />}
+            {a.os_total === 0 ? <>
+              {/* Pas d'OS — seulement saisie manuelle en complément */}
+              {bmf>0 && <>
+                <CtxItem label="Montant saisi manuellement" tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                {showManu && <InputRow label={`Montant à reporter (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
+              </>}
+            </> : <>
+              {/* OS ouverts — actions détaillées */}
+              {ne>0  && <CtxItem label={`Budget sans OS — NE (${fmt(ne)})`}           tipKey="ne"  onClick={()=>apply("ne")} />}
+              {far>0 && <CtxItem label={`FAR sur OS émis — E−F (${fmt(far)})`}        tipKey="far" onClick={()=>apply("far")} />}
+              {nf>0  && <CtxItem label={`Budget non facturé — NF=B1−F (${fmt(nf)})`}  tipKey="nf"  onClick={()=>apply("nf")} />}
+              {bmf>0 && <>
+                <CtxItem label="Montant saisi manuellement" tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                {showManu && <InputRow label={`Montant à reporter (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
+              </>}
+              <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
+              {bmf>0 && <>
+                <CtxItem label="Saisir le budget complémentaire à conserver et reporter le solde" tipKey="conserve" onClick={()=>setShowConserve(s=>!s)} />
+                {showConserve && <InputRowConserve facture={a.facture} budget={a.budget} onApply={v=>apply("conserve",v)} />}
+              </>}
             </>}
             {hasReport && <>
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
@@ -257,6 +312,30 @@ const TD = ({children, right, style={}}) => (
     textAlign:right?"right":"left", fontSize:13, ...style }}>{children}</td>
 );
 
+function EditCell({id, col, initVal, bbot, editing, overrides, setEditing, setOverrides}) {
+  const isEdit      = editing?.id===id && editing?.col===col;
+  const hasOverride = overrides[id]?.[col] !== undefined;
+  const val         = hasOverride ? overrides[id][col] : null;
+  return (
+    <td style={{ padding:"4px 8px", borderBottom:bbot, textAlign:"right", verticalAlign:"middle",
+      background: hasOverride ? "#fffbe0" : "#fafaf8", cursor:"pointer", fontSize:13 }}
+      title="Double-cliquez pour modifier"
+      onDoubleClick={()=>setEditing({id,col})}>
+      {isEdit
+        ? <input autoFocus type="number" defaultValue={hasOverride ? val : initVal}
+            onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v))setOverrides(p=>({...p,[id]:{...p[id],[col]:v}}));setEditing(null);}}
+            onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
+            style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
+        : hasOverride
+          ? <span style={{ color:"#b05000", fontWeight:600 }}>
+              {val>0 ? fmt(val) : <span style={{color:"#ccc"}}>—</span>}
+              <span style={{fontSize:9,color:"#c08030",display:"block"}}>✎</span>
+            </span>
+          : <span style={{color:"#ccc"}}>—</span>}
+    </td>
+  );
+}
+
 const thG = { // style groupe entête
   fontSize:11, fontWeight:600, textAlign:"center", padding:"4px 8px",
   borderBottom:"0.5px solid #eee", borderLeft:"1px solid #ddd", color:"#555"
@@ -270,6 +349,7 @@ export default function App() {
   const [overrides,setOverrides]  = useState({});
   const [editing,  setEditing]    = useState(null);
   const [comments, setComments]   = useState({});
+  const [confirmModal, setConfirmModal] = useState(null); // {msg, onConfirm}
 
   const toast = (msg,type) => { setToastMsg({msg,type}); setTimeout(()=>setToastMsg(null),4000); };
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
@@ -283,52 +363,28 @@ export default function App() {
   const totNF      = CAPEX_DATA.reduce((s,a)=>s+calcNF(a),0);
   const totReport  = CAPEX_DATA.reduce((s,a)=>s+calcTotalReport(a,reports),0);
   const totB1init  = CAPEX_DATA.reduce((s,a)=>s+a.B1,0);
-  const totB1rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B1rev ?? (a.B1+calcTotalReport(a,reports))),0);
+  const totB1rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B1rev ?? (a.B1-calcTotalReport(a,reports))),0);
   const totB2init  = CAPEX_DATA.reduce((s,a)=>s+a.B2,0);
-  const totB2rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B2rev ?? 0),0);
+  const totB2rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B2rev ?? (calcTotalReport(a,reports)>0 ? a.B2+calcTotalReport(a,reports) : a.B2)),0);
   const totB3init  = CAPEX_DATA.reduce((s,a)=>s+a.B3,0);
-  const totB3rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B3rev ?? 0),0);
+  const totB3rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B3rev ?? a.B3),0);
   const totB4init  = CAPEX_DATA.reduce((s,a)=>s+a.B4,0);
-  const totB4rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B4rev ?? 0),0);
+  const totB4rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B4rev ?? a.B4),0);
   const totB5init  = CAPEX_DATA.reduce((s,a)=>s+a.B5,0);
-  const totB5rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B5rev ?? 0),0);
-  const hasB2rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B2rev!==undefined);
+  const totB5rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B5rev ?? a.B5),0);
+  const hasB2rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B2rev!==undefined || calcTotalReport(a,reports)>0);
   const hasB3rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B3rev!==undefined);
   const hasB4rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B4rev!==undefined);
   const hasB5rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B5rev!==undefined);
   const totB6init  = CAPEX_DATA.reduce((s,a)=>s+a.B6,0);
-  const totB6rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B6rev ?? 0),0);
+  const totB6rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B6rev ?? a.B6),0);
   const hasB6rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B6rev!==undefined);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
-  const totRevise  = totB1rev +totB2rev +totB3rev +totB4rev +totB5rev +totB6rev;
+  const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
+  const hasAnyRev  = totReport>0 || CAPEX_DATA.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
-  const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"6px 10px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap" };
-
-  // Cellule éditable (révisé N+2..N+5)
-  const EditCell = ({id, col, initVal, bbot}) => {
-    const isEdit      = editing?.id===id && editing?.col===col;
-    const hasOverride = overrides[id]?.[col] !== undefined;
-    const val         = hasOverride ? overrides[id][col] : null;
-    return (
-      <td style={{ padding:"4px 8px", borderBottom:bbot, textAlign:"right", verticalAlign:"middle",
-        background: hasOverride ? "#fffbe0" : "#fafaf8", cursor:"pointer", fontSize:13 }}
-        title="Double-cliquez pour modifier"
-        onDoubleClick={()=>setEditing({id,col})}>
-        {isEdit
-          ? <input autoFocus type="number" defaultValue={hasOverride ? val : initVal}
-              onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v))setOverrides(p=>({...p,[id]:{...p[id],[col]:v}}));setEditing(null);}}
-              onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
-              style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
-          : hasOverride
-            ? <span style={{ color:"#b05000", fontWeight:600 }}>
-                {val>0 ? fmt(val) : <span style={{color:"#ccc"}}>—</span>}
-                <span style={{fontSize:9,color:"#c08030",display:"block"}}>✎</span>
-              </span>
-            : <span style={{color:"#ccc"}}>—</span>}
-      </td>
-    );
-  };
+  const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"3px 8px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap", lineHeight:"1.2" };
 
   return (
     <div style={{ fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", padding:"1rem 2rem", color:"#1a1a18" }}>
@@ -341,6 +397,21 @@ export default function App() {
         <span style={{ fontSize:11, background:"#f0efe9", border:"0.5px solid #ddd", borderRadius:20, padding:"3px 10px", color:"#888" }}>Démo SNK</span>
       </div>
 
+      {confirmModal && (
+        <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.35)"}}>
+          <div style={{background:"#fff",borderRadius:12,padding:"28px 32px",maxWidth:420,boxShadow:"0 8px 32px rgba(0,0,0,0.18)",textAlign:"center"}}>
+            <div style={{fontSize:22,marginBottom:12}}>⚠️</div>
+            <div style={{fontSize:14,color:"#333",lineHeight:1.6,marginBottom:24}}>{confirmModal.msg}</div>
+            <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+              <button onClick={()=>setConfirmModal(null)}
+                style={{padding:"8px 24px",borderRadius:8,border:"1px solid #ddd",background:"#f5f5f5",cursor:"pointer",fontSize:13}}>Annuler</button>
+              <button onClick={()=>{confirmModal.onConfirm();setConfirmModal(null);}}
+                style={{padding:"8px 24px",borderRadius:8,border:"none",background:"#185FA5",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600}}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toastMsg && (() => {
         const [c,bg,bc]=(toastColors[toastMsg.type]||toastColors.info).split("|");
         return <div style={{display:"flex",alignItems:"center",gap:8,padding:"9px 13px",borderRadius:8,fontSize:12,marginBottom:12,border:`0.5px solid ${bc}`,background:bg,color:c}}>{toastMsg.msg}</div>;
@@ -349,10 +420,9 @@ export default function App() {
       <style>{`
         .capex-table { border-collapse: separate; border-spacing: 0; }
         .capex-table td, .capex-table th { border-bottom: 0.5px solid #eee; }
-        .capex-table thead tr:nth-child(1) tr { position: sticky; top: 0; z-index: 20; }
-        .capex-table thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 20; }
-        .capex-table thead tr:nth-child(2) th { position: sticky; top: 33px; z-index: 20; }
-        .capex-table thead tr:nth-child(3) th { position: sticky; top: 66px; z-index: 20; }
+        .capex-table thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 20; height: 28px; }
+        .capex-table thead tr:nth-child(2) th { position: sticky; top: 28px; z-index: 20; height: 28px; }
+        .capex-table thead tr:nth-child(3) th { position: sticky; top: 56px; z-index: 20; height: 42px; }
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
@@ -361,6 +431,7 @@ export default function App() {
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
               <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12 }}>Identification</th>
+              <th colSpan={2} style={{ ...thG, color:"#fff", background:"#2a2a26", borderLeft:"1px solid #444", borderRight:"1px solid #444" }}>Total {AN(0)}→{AN(5)}</th>
               <th colSpan={7} style={{ ...thG, color:"#fff", background:"#2a5a8a", borderLeft:"1px solid #d0d8e8" }}>{AN(0)}</th>
               {[1,2,3,4,5].map(i => (
                 <th key={i} colSpan={2} style={{ ...thG, color:"#fff", background:"#1e3a5a", borderLeft:"1px solid #d0d8e8" }}>{AN(i)}</th>
@@ -370,9 +441,43 @@ export default function App() {
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
               <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}></th>
+              <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>Budget pluriannuel</th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#e8eff8", borderLeft:"1px solid #d0d8e8", fontSize:11 }}>Budget</th>
-              <th colSpan={2} style={{ ...thG, color:"#3A7A4A", background:"#e0f0e8", borderLeft:"1px solid #b0d8b8", fontSize:11 }}>Engagé / Facturé (EVEN)</th>
-              <th colSpan={3} style={{ ...thG, color:"#8a4020", background:"#f8e8d8", borderLeft:"1px solid #d8b898", fontSize:11 }}>Reports possibles sur {AN(0)}</th>
+              <th colSpan={2} style={{ ...thG, color:"#3A7A4A", background:"#e0f0e8", borderLeft:"1px solid #b0d8b8", fontSize:11 }}>Engagé / Facturé {AN(0)} (EVEN)</th>
+              <th colSpan={3} style={{ ...thG, color:"#8a4020", background:"#f8e8d8", borderLeft:"1px solid #d8b898", fontSize:11 }}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                  <span>Reports possibles sur {AN(0)}</span>
+                  <button
+                    onClick={()=>setConfirmModal({
+                      msg:`Appliquer sur toutes les lignes le report du Budget non facturé (B1 − Facturé) sur ${AN(1)} ? Cette action écrasera les reports existants.`,
+                      onConfirm:()=>{
+                        setReports(prev=>{
+                          const next={...prev};
+                          CAPEX_DATA.forEach(a=>{
+                            const nf=calcNF(a);
+                            if(nf>0) next[a.id]={report:nf,rt:"nf"};
+                          });
+                          return next;
+                        });
+                        setOverrides(prev=>{
+                          const next={...prev};
+                          CAPEX_DATA.forEach(a=>{
+                            if(next[a.id]?.B1rev!==undefined){
+                              const {B1rev,...rest}=next[a.id];
+                              if(Object.keys(rest).length) next[a.id]=rest;
+                              else delete next[a.id];
+                            }
+                          });
+                          return next;
+                        });
+                      }
+                    })}
+                    style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"1px solid #c08050",
+                      background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                    ⚡ Tout reporter B1−F
+                  </button>
+                </div>
+              </th>
               {[1,2,3,4,5].map(i => (
                 <th key={i} colSpan={2} style={{ ...thG, color:"#555", background:"#e8eff8", borderLeft:"1px solid #d0d8e8", fontSize:11 }}>Budget</th>
               ))}
@@ -383,12 +488,19 @@ export default function App() {
               <th style={{ ...thS, width:32 }}></th>
               <th style={{ ...thS, minWidth:180 }}>Opération / OS</th>
               <th style={{ ...thS, width:58 }}>Clé</th>
+              {/* Total pluriannuel */}
+              <th style={{ ...thS, textAlign:"right", width:110, borderLeft:"1px solid #444" }}>
+                <span style={{ color:"#bbb", fontSize:10 }}>B1+…+B6</span><br/>Validé
+              </th>
+              <th style={{ ...thS, textAlign:"right", width:110, background:"#fffbe0", borderRight:"1px solid #444" }}>
+                <span style={{ color:"#c08030", fontSize:10 }}>B1'+…+B6'</span><br/><span style={{color:"#c08030"}}>Révisé</span>
+              </th>
               {/* 2026 — Budget */}
               <th style={{ ...thS, textAlign:"right", width:100, borderLeft:"1px solid #d0d8e8" }}>
                 <span style={{ color:"#bbb", fontSize:10 }}>B1</span><br/>Validé
               </th>
               <th style={{ ...thS, textAlign:"right", width:110, background:"#fffbe0" }}>
-                <span style={{ color:"#c08030", fontSize:10 }}>B1'=B1+report</span><br/><span style={{color:"#c08030"}}>Révisé</span>
+                <span style={{ color:"#c08030", fontSize:10 }}>B1'=B1−report</span><br/><span style={{color:"#c08030"}}>Révisé</span>
               </th>
               {/* 2026 — Engagé/Facturé */}
               <th style={{ ...thS, textAlign:"right", width:95, borderLeft:"1px solid #b0d8b8", background:"#F0F7F2" }}>
@@ -435,19 +547,19 @@ export default function App() {
               const ne       = calcNE(a);
               const far      = calcTfar(a);
               const nf       = calcNF(a);
-              const B1rev    = overrides[a.id]?.B1rev ?? (a.B1 + totalRep);
-              const B2rev    = overrides[a.id]?.B2rev ?? a.B2;
-              const B3rev    = overrides[a.id]?.B3rev ?? a.B3;
-              const B4rev    = overrides[a.id]?.B4rev ?? a.B4;
-              const B5rev    = overrides[a.id]?.B5rev ?? a.B5;
-              const B6rev    = overrides[a.id]?.B6rev ?? a.B6;
+              const B1rev    = overrides[a.id]?.B1rev ?? (a.B1 - totalRep);
+              const B2rev    = overrides[a.id]?.B2rev ?? (totalRep > 0 ? a.B2 + totalRep : null);
+              const B3rev    = overrides[a.id]?.B3rev ?? null;
+              const B4rev    = overrides[a.id]?.B4rev ?? null;
+              const B5rev    = overrides[a.id]?.B5rev ?? null;
+              const B6rev    = overrides[a.id]?.B6rev ?? null;
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
-              const totalRev  = B1rev+B2rev+B3rev+B4rev+B5rev+B6rev;
+              const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (B3rev??a.B3) + (B4rev??a.B4) + (B5rev??a.B5) + (B6rev??a.B6);
               const isLast   = ai===CAPEX_DATA.length-1;
               const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
-              const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE"};
-              const rtColors = {far:"#27500A|#EAF3DE",ne:"#854F0B|#FAEEDA",nf:"#5C3D00|#FEF0D0",manu:"#0C447C|#E6F1FB",conserve:"#0C447C|#E6F1FB"};
+              const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
+              const rtColors = {far:"#27500A|#EAF3DE",ne:"#854F0B|#FAEEDA",nf:"#5C3D00|#FEF0D0",manu:"#0C447C|#E6F1FB",conserve:"#0C447C|#E6F1FB",full:"#3a0a6e|#ede0ff"};
               const [rtC,rtBg] = (rtColors[rt]||"#555|#eee").split("|");
               const isB1RevEdit = editing?.id===a.id && editing?.col==="B1rev";
 
@@ -469,14 +581,15 @@ export default function App() {
                     <span style={{display:"inline-block",fontSize:11,padding:"2px 6px",borderRadius:4,fontWeight:500,
                       background:a.type==="DTQ"?"#E6F1FB":"#EEEDFE",color:a.type==="DTQ"?"#0C447C":"#3C3489"}}>{a.type}</span>
                   </TD>
-                  {/* Budget total initial */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#555"}}>
+                  {/* Total validé */}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #444",color:"#555",fontWeight:500}}>
                     {fmt(totalInit)}
                   </td>
-                  {/* Budget total révisé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:totalRep>0?"#fffbe0":"#fafaf8",
-                    fontWeight:totalRep>0?600:400,color:totalRep>0?"#b05000":"#888"}}>
-                    {totalRep>0 ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}
+                  {/* Total révisé */}
+                  <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,borderRight:"1px solid #444",
+                    background: totalRev!==totalInit ? "#fffbe0" : "#fafaf8",
+                    color: totalRev!==totalInit ? "#b05000" : "#ccc", fontWeight: totalRev!==totalInit ? 600 : 400}}>
+                    {totalRev!==totalInit ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* B1 initial */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#555"}}>
@@ -487,6 +600,19 @@ export default function App() {
                     const hasOverride = overrides[a.id]?.B1rev !== undefined;
                     const displayVal  = hasOverride ? overrides[a.id].B1rev : (totalRep > 0 ? B1rev : null);
                     const isActive    = totalRep > 0 || hasOverride;
+                    const f = a.facture;
+                    const farVal = calcTfar(a);
+                    const neVal  = calcNE(a);
+                    // Détail de composition selon l'action
+                    const detail = () => {
+                      if (hasOverride) return <span style={{fontSize:9,color:"#c08030"}}>✎ saisi manuellement</span>;
+                      if (rt==="full")     return <span style={{fontSize:10,color:"#7090CC"}}>Budget complet reporté sur {AN(1)}</span>;
+                      if (rt==="far")     return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + Non engagé {fmt(neVal)}</span>;
+                      if (rt==="ne")      return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + FAR {fmt(farVal)}</span>;
+                      if (rt==="manu")    return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + reste {fmt(B1rev-f)}</span>;
+                      if (rt==="conserve"){ const conserve=B1rev-f; return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + conservé {fmt(conserve)}</span>; }
+                      return null;
+                    };
                     return (
                       <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,
                         background: isActive ? "#fffbe0" : "#fafaf8",
@@ -495,25 +621,36 @@ export default function App() {
                         onDoubleClick={()=>setEditing({id:a.id,col:"B1rev"})}>
                         {isB1RevEdit
                           ? <input autoFocus type="number" defaultValue={displayVal ?? a.B1}
-                              onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v))setOverrides(p=>({...p,[a.id]:{...p[a.id],B1rev:v}}));setEditing(null);}}
+                              onBlur={e=>{
+                                const v=parseFloat(e.target.value);
+                                if(!isNaN(v)){
+                                  const totalInitRow = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
+                                  const newTotalRev  = v + (overrides[a.id]?.B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
+                                  if(newTotalRev > totalInitRow){
+                                    setEditing(null);
+                                    setConfirmModal({
+                                      msg:`Le total du budget révisé (${fmt(newTotalRev)}) est supérieur au budget initial (${fmt(totalInitRow)}) ; confirmez-vous la saisie ?`,
+                                      onConfirm:()=>setOverrides(p=>({...p,[a.id]:{...p[a.id],B1rev:v}}))
+                                    });
+                                  } else {
+                                    setOverrides(p=>({...p,[a.id]:{...p[a.id],B1rev:v}}));
+                                    setEditing(null);
+                                  }
+                                } else { setEditing(null); }
+                              }}
                               onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                               style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                           : isActive
                             ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-                                <span style={{color: hasOverride ? "#b05000" : "#b05000"}}>{fmt(displayVal)}</span>
-                                {hasOverride
-                                  ? <span style={{fontSize:9,color:"#c08030"}}>✎ saisi manuellement</span>
-                                  : <div style={{display:"flex",alignItems:"center",gap:4}}>
-                                      <span style={{fontSize:10,color:"#7090CC"}}>base {fmt(a.B1)} +{fmt(totalRep)}</span>
-                                      {rt&&rtLabels[rt]&&<span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:rtBg,color:rtC,fontWeight:700}}>{rtLabels[rt]}</span>}
-                                    </div>}
+                                <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
+                                {detail()}
                               </div>
                             : <span style={{color:"#ccc"}}>—</span>}
                       </td>
                     );
                   })()}
                   {/* OS engagés */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",background:"#F0F7F2",color:"#185FA5"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #b0d8b8",background:"#F0F7F2",color:"#185FA5"}}>
                     {fmt(a.os_total)}
                   </td>
                   {/* Facturé */}
@@ -521,29 +658,52 @@ export default function App() {
                     {fmt(a.facture)}
                   </td>
                   {/* FAR */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee"}}>
                     {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* Non engagé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee"}}>
                     {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                   </td>
                   {/* Non facturé + menu ⋮ */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <CtxMenu a={a} reports={reports} setReports={setReports} toast={toast} />
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} />
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
-                  {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col])=>(
-                    <>
-                      <td key={init} style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#888"}}>
-                        {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}
-                      </td>
-                      <EditCell key={col} id={a.id} col={col} initVal={a[init]} bbot={bbot} />
-                    </>
-                  ))}
+                  {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col],i)=>{
+                    const autoVal = col==="B2rev" && totalRep>0 ? a[init]+totalRep : null;
+                    const hasOvr  = overrides[a.id]?.[col] !== undefined;
+                    const dispVal = hasOvr ? overrides[a.id][col] : autoVal;
+                    const isEdit  = editing?.id===a.id && editing?.col===col;
+                    return (
+                      <>
+                        <td key={init} style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#888"}}>
+                          {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}
+                        </td>
+                        <td key={col} style={{padding:"4px 8px",borderBottom:bbot,textAlign:"right",verticalAlign:"middle",
+                          background:dispVal!==null?"#fffbe0":"#fafaf8",cursor:"pointer",fontSize:13}}
+                          title="Double-cliquez pour modifier"
+                          onDoubleClick={()=>setEditing({id:a.id,col})}>
+                          {isEdit
+                            ? <input autoFocus type="number" defaultValue={dispVal??a[init]}
+                                onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){const tot0=a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;const cur=overrides[a.id]||{};const nr=(cur.B1rev??a.B1)+(col==="B2rev"?v:(cur.B2rev??a.B2))+(col==="B3rev"?v:(cur.B3rev??a.B3))+(col==="B4rev"?v:(cur.B4rev??a.B4))+(col==="B5rev"?v:(cur.B5rev??a.B5))+(col==="B6rev"?v:(cur.B6rev??a.B6));if(nr>tot0){setEditing(null);setConfirmModal({msg:`Le total du budget révisé (${fmt(nr)}) est supérieur au budget initial (${fmt(tot0)}) ; confirmez-vous la saisie ?`,onConfirm:()=>setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}))});}else{setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}));setEditing(null);}}else setEditing(null);}}
+                                onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
+                                style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
+                            : dispVal!==null
+                              ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:1}}>
+                                  <span style={{color:"#b05000",fontWeight:600}}>{fmt(dispVal)}</span>
+                                  {!hasOvr && col==="B2rev" && totalRep>0 &&
+                                    <span style={{fontSize:10,color:"#7090CC"}}>{fmt(a[init])} +{fmt(totalRep)}</span>}
+                                  {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
+                                </div>
+                              : <span style={{color:"#ccc"}}>—</span>}
+                        </td>
+                      </>
+                    );
+                  })}
                   {/* Commentaire */}
                   <td style={{padding:"4px 8px",borderBottom:bbot,borderLeft:"1px solid #ddd",verticalAlign:"middle"}}>
                     <textarea
@@ -565,7 +725,9 @@ export default function App() {
                   const td = (v,extra={}) => <td style={{padding:"6px 10px",borderBottom:bsep,textAlign:"right",fontSize:12,color:"#ccc",...extra}}>{v||"—"}</td>;
                   return (
                     <tr key={o.id} style={{background:"#f7f7f5"}}>
+                      {/* chevron */}
                       <td style={{padding:"6px 10px",borderBottom:bsep}}></td>
+                      {/* Opération */}
                       <td style={{padding:"6px 10px",borderBottom:bsep,fontSize:12}}>
                         <span style={{color:"#ccc",marginRight:4}}>↳</span>
                         <strong>{o.id.toUpperCase()}</strong>
@@ -573,19 +735,32 @@ export default function App() {
                           background:statBadge.bg,color:statBadge.c,fontWeight:600}}>{statBadge.l}</span>
                         <br/><span style={{color:"#aaa",fontSize:11}}>{o.label}</span>
                       </td>
+                      {/* Clé */}
                       <td style={{padding:"6px 10px",borderBottom:bsep}}></td>
+                      {/* Total validé/révisé — vide pour OS */}
+                      {td(null,{borderLeft:"1px solid #444"})}
+                      {td(null,{background:"#fafaf8",borderRight:"1px solid #444"})}
+                      {/* B1 Validé */}
                       {td(null,{borderLeft:"1px solid #ddd"})}
-                      {td(null,{background:"#fafaf8"})}
-                      {td(null,{borderLeft:"1px solid #ddd"})}
-                      {td(oRep?.report>0?<span style={{color:"#185FA5",fontWeight:600}}>+{fmt(oRep.report)}</span>:null,{background:"#fafaf8"})}
-                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",borderLeft:"1px solid #ddd",color:"#185FA5",fontSize:12}}>{fmt(o.montant)}</td>
-                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",fontSize:12}}>{fmt(o.facture)}</td>
-                      {td(null,{background:"#F0F7F2"})}
-                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #ddd",fontSize:12}}>
-                        {f>0?<strong style={{color:"inherit"}}>{fmt(f)}</strong>:"—"}
+                      {/* B1 Révisé — affiche le report si OS a un report */}
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#fafaf8"}}>
+                        {oRep?.report>0?<span style={{color:"#185FA5",fontWeight:600}}>+{fmt(oRep.report)}</span>:<span style={{color:"#ccc"}}>—</span>}
                       </td>
-                      {td(null)}{td(null)}
+                      {/* E OS engagés */}
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",borderLeft:"1px solid #b0d8b8",color:"#185FA5",fontSize:12}}>{fmt(o.montant)}</td>
+                      {/* F Facturé */}
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",fontSize:12}}>{fmt(o.facture)}</td>
+                      {/* FAR */}
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12}}>
+                        {f>0?<strong style={{color:"inherit"}}>{fmt(f)}</strong>:<span style={{color:"#ccc"}}>—</span>}
+                      </td>
+                      {/* NE */}
+                      {td(null,{background:"#fdf5ee"})}
+                      {/* NF */}
+                      {td(null,{background:"#fdf5ee"})}
+                      {/* B2→B6 Validé + Révisé */}
                       {["B2","B3","B4","B5","B6"].map(b=><>{td(null,{borderLeft:"1px solid #ddd"})}{td(null,{background:"#fafaf8"})}</>)}
+                      {/* Commentaire */}
                       <td style={{borderBottom:bsep,borderLeft:"1px solid #ddd"}}></td>
                     </tr>
                   );
@@ -598,17 +773,16 @@ export default function App() {
               <td style={{borderBottom:"none",padding:"9px 6px", background:"#1a1a18"}}></td>
               <td style={{padding:"9px 10px",borderBottom:"none",fontWeight:700,fontSize:14, background:"#1a1a18"}}>Total</td>
               <td style={{borderBottom:"none",padding:"9px 6px", background:"#1a1a18"}}></td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8", background:"#1e2a38"}}>{fmt(totInitial)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>
-                {totReport>0?fmt(totRevise):<span style={{color:"#666"}}>—</span>}
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #444",background:"#1e2a38",color:"#fff",fontWeight:600}}>{fmt(totInitial)}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd",fontWeight:600,borderRight:"1px solid #444"}}>
+                {hasAnyRev?fmt(totRevise):<span style={{color:"#666"}}>—</span>}
               </td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #2a4a2a",background:"#1a3020",color:"#7ecfaa"}}>{fmt(totB1init)}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38",color:"#fff"}}>{fmt(totB1init)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>
-                {totReport>0?<>{fmt(totB1rev)}<div style={{fontSize:10,fontWeight:400,color:"#aa9"}}>+{fmt(totReport)} reportés</div></>:<span style={{color:"#666"}}>—</span>}
+                {totReport>0?fmt(totB1rev):<span style={{color:"#666"}}>—</span>}
               </td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #2a4a2a",background:"#1a3020",color:"#7ecfaa"}}>{fmt(totOS)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#1a3020",color:"#7ecfaa"}}>{fmt(totFac)}</td>
-              <td style={{borderBottom:"none",background:"#2a1808"}}></td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totFAR)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNE)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNF)}</td>
