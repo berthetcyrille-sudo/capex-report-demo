@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-const ANNEE_REF = 2026; // Année en cours (engagé/facturé EVEN + B1)
-// B1=2026, B2=2027, B3=2028, B4=2029, B5=2030, B6=2031
-const AN = (n) => ANNEE_REF + n; // AN(0)=2026 ... AN(5)=2031
+// AN(n) est recalculé dynamiquement depuis le state dateSimu dans App
 
 const CAPEX_DATA = [
   { id:"pac",    label:"Remplacement PAC",                   sub:"CVC · Génie climatique",         type:"DTQ",
@@ -350,7 +348,11 @@ export default function App() {
   const [overrides,setOverrides]  = useState({});
   const [editing,  setEditing]    = useState(null);
   const [comments, setComments]   = useState({});
-  const [confirmModal, setConfirmModal] = useState(null); // {msg, onConfirm}
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [dateSimu, setDateSimu]   = useState("2026-09-30");
+
+  const anneeRef = new Date(dateSimu).getFullYear() || 2026;
+  const AN = (n) => anneeRef + n; // {msg, onConfirm}
 
   const toast = (msg,type) => { setToastMsg({msg,type}); setTimeout(()=>setToastMsg(null),4000); };
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
@@ -411,9 +413,29 @@ export default function App() {
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"1rem", flexWrap:"wrap", gap:12 }}>
         <div>
           <div style={{ fontSize:18, fontWeight:500 }}>Suivi budgétaire des opérations CAPEX</div>
-          <div style={{ fontSize:13, color:"#888", marginTop:2 }}>Situation au 30 septembre {AN(0)} · 12 opérations · Budget construit fin {AN(0)-1}</div>
+          <div style={{ fontSize:13, color:"#888", marginTop:2 }}>
+            Situation au {new Date(dateSimu).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})} · 12 opérations · Budget construit fin {AN(0)-1}
+          </div>
         </div>
-        <span style={{ fontSize:11, background:"#f0efe9", border:"0.5px solid #ddd", borderRadius:20, padding:"3px 10px", color:"#888" }}>Démo SNK</span>
+        <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, background:"#f5f5f0", border:"0.5px solid #ddd", borderRadius:8, padding:"6px 12px" }}>
+            <span style={{ fontSize:12, color:"#888", whiteSpace:"nowrap" }}>📅 Date de simulation</span>
+            <input type="date" value={dateSimu} onChange={e=>{
+                if(e.target.value) {
+                  setDateSimu(e.target.value);
+                  // Reset reports et overrides si l'année change
+                  const newYear = new Date(e.target.value).getFullYear();
+                  if(newYear !== anneeRef) {
+                    setReports({});
+                    setOverrides({});
+                    toast(`Année de simulation basculée sur ${newYear} — données réinitialisées.`,"info");
+                  }
+                }
+              }}
+              style={{ fontSize:13, border:"none", background:"transparent", cursor:"pointer", outline:"none", color:"#333" }} />
+          </div>
+          <span style={{ fontSize:11, background:"#f0efe9", border:"0.5px solid #ddd", borderRadius:20, padding:"3px 10px", color:"#888" }}>Démo SNK</span>
+        </div>
       </div>
 
       {confirmModal && (
