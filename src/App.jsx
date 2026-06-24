@@ -459,33 +459,21 @@ export default function App() {
   const totB2init  = capexData.reduce((s,a)=>s+a.B2,0);
   const totB2rev   = capexData.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
-    if(ovr!==undefined) return s+ovr;
-    if(rep>0) return s+(a.B2+rep);
-    return s;
+    if(ovr!==undefined && ovr!==a.B2) return s+ovr; // override manuel réel
+    if(rep>0) return s+(a.B2+rep); // report actif
+    return s+a.B2; // pas de révision → on prend le validé
   },0);
   const totB3init  = capexData.reduce((s,a)=>s+a.B3,0);
-  const totB3rev   = capexData.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined ? s+overrides[a.id].B3rev : s, 0);
+  const totB3rev   = capexData.reduce((s,a)=>s+(overrides[a.id]?.B3rev!==undefined&&overrides[a.id].B3rev!==a.B3 ? overrides[a.id].B3rev : a.B3), 0);
   const totB4init  = capexData.reduce((s,a)=>s+a.B4,0);
-  const totB4rev   = capexData.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined ? s+overrides[a.id].B4rev : s, 0);
+  const totB4rev   = capexData.reduce((s,a)=>s+(overrides[a.id]?.B4rev!==undefined&&overrides[a.id].B4rev!==a.B4 ? overrides[a.id].B4rev : a.B4), 0);
   const totB5init  = capexData.reduce((s,a)=>s+a.B5,0);
-  const totB5rev   = capexData.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined ? s+overrides[a.id].B5rev : s, 0);
+  const totB5rev   = capexData.reduce((s,a)=>s+(overrides[a.id]?.B5rev!==undefined&&overrides[a.id].B5rev!==a.B5 ? overrides[a.id].B5rev : a.B5), 0);
   const totB6init  = capexData.reduce((s,a)=>s+a.B6,0);
-  const totB6rev   = capexData.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined ? s+overrides[a.id].B6rev : s, 0);
+  const totB6rev   = capexData.reduce((s,a)=>s+(overrides[a.id]?.B6rev!==undefined&&overrides[a.id].B6rev!==a.B6 ? overrides[a.id].B6rev : a.B6), 0);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
   // Total révisé = initial des lignes non révisées + révisé des lignes révisées
-  const totRevise  = capexData.reduce((s,a)=>{
-    const rep=calcTotalReport(a,reports);
-    const ovr=overrides[a.id]||{};
-    const hasRev=rep>0||Object.keys(ovr).some(k=>k.endsWith("rev"));
-    if(!hasRev) return s; // ligne non révisée → ne contribue pas
-    const b1=ovr.B1rev!==undefined?ovr.B1rev:(rep>0?a.B1-rep:a.B1);
-    const b2=ovr.B2rev!==undefined?ovr.B2rev:(rep>0?a.B2+rep:a.B2);
-    const b3=ovr.B3rev!==undefined?ovr.B3rev:a.B3;
-    const b4=ovr.B4rev!==undefined?ovr.B4rev:a.B4;
-    const b5=ovr.B5rev!==undefined?ovr.B5rev:a.B5;
-    const b6=ovr.B6rev!==undefined?ovr.B6rev:a.B6;
-    return s+b1+b2+b3+b4+b5+b6;
-  },0);
+  const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
   const hasAnyRev  = totReport>0 || capexData.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
