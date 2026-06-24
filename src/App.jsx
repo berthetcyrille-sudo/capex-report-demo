@@ -62,10 +62,11 @@ const CAPEX_DATA = [
 
 const TIPS = {
   full:     "Reporter l'intégralité du budget 2026 sur 2027. Disponible uniquement si aucun OS n'a été ouvert sur cette opération.",
-  far:      "Reporter sur 2026 les Factures À Recevoir sur OS émis : FAR = E − F. Ces sommes sont juridiquement engagées.",
-  nf:       "Reporter sur 2026 le budget non facturé : NF = B1 − F. Inclut les FAR et le non engagé.",
-  manu:     "Reporter sur 2026 un montant saisi manuellement. Utile pour un arbitrage partiel.",
-  conserve: "Saisir le budget complémentaire à conserver en 2026 (hors factures déjà comptabilisées). Le solde restant sera reporté sur 2026.",
+  ne:       "Reporter sur 2027 le budget sans OS : solde budgétaire non couvert par un ordre de service (NE = B1 − E). Nécessite validation DAF.",
+  far:      "Reporter sur 2027 les Factures À Recevoir sur OS émis : FAR = E − F. Ces sommes sont juridiquement engagées.",
+  nf:       "Reporter sur 2027 le budget non facturé : NF = B1 − F. Inclut les FAR et le solde non engagé.",
+  manu:     "Reporter sur 2027 un montant saisi manuellement. Utile pour un arbitrage partiel.",
+  conserve: "Saisir le budget complémentaire à conserver en 2026 (hors factures déjà comptabilisées). Le solde restant sera reporté sur 2027.",
   reset:    "Annuler toutes les actions de report sur cette ligne.",
 };
 
@@ -258,7 +259,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast }) {
             <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", letterSpacing:".07em",
               color:"#999", padding:"8px 12px 4px" }}>{a.label.slice(0,30)}</div>
             <div style={{ fontSize:11, fontWeight:600, color:"#555", padding:"6px 12px 4px", borderTop:"0.5px solid #eee" }}>
-              Reporter sur 2026 :
+              Reporter sur {AN(1)} :
             </div>
             {/* Report complet — grisé si OS ouverts */}
             <div style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"7px 12px",
