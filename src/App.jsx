@@ -64,14 +64,6 @@ const CAPEX_DATA = [
     budget:320000,  os_total:180000, facture:90000,
     B1:0,       B2:0,        B3:280000,  B4:0,       B5:0,       B6:0,
     os:[{id:"os081",label:"Étanchéité parking sous-sol niveaux −1 et −2", montant:180000,facture:90000,statut:"cours"}]},
-  { id:"sprinkler",label:"Mise à niveau sprinklers",         sub:"Sécurité incendie · Réglementaire",type:"DTQ",
-    dateOuverture:2025,
-    historique:[
-      {annee:2025, B1:400000,  os_total:380000, facture:150000},
-    ],
-    budget:450000,  os_total:450000, facture:210000,
-    B1:0,       B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
-    os:[{id:"os082",label:"Remplacement têtes + centrale détection",  montant:450000,facture:210000,statut:"cours"}]},
   { id:"sas",   label:"Création sas d'entrée",               sub:"Aménagement · Valorisation",     type:"DEV",
     dateOuverture:2026,
     historique:[],
@@ -383,6 +375,70 @@ const thG = { // style groupe entête
 };
 
 // ─── App ─────────────────────────────────────────────────────────────────────
+function AddLineModal({ AN, onClose, onAdd }) {
+  const [label, setLabel] = useState("");
+  const [sub,   setSub]   = useState("");
+  const [type,  setType]  = useState("DTQ");
+  const handleAdd = () => {
+    if(!label.trim()){ alert("Le libellé est obligatoire."); return; }
+    onAdd({
+      id: "custom_" + Date.now(),
+      label: label.trim(), sub: sub.trim(), type,
+      dateOuverture: AN(0),
+      historique: [],
+      budget:0, os_total:0, facture:0,
+      B1:0, B2:0, B3:0, B4:0, B5:0, B6:0,
+      os:[],
+    });
+  };
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.4)"}}>
+      <div style={{background:"#fff",borderRadius:12,padding:"28px 32px",maxWidth:420,width:"90vw",boxShadow:"0 8px 32px rgba(0,0,0,0.2)",position:"relative"}}>
+        <button onClick={onClose} style={{position:"absolute",top:12,right:14,background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#aaa"}}>✕</button>
+        <div style={{fontSize:18,fontWeight:600,marginBottom:16}}>+ Nouvelle opération CAPEX</div>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div>
+            <label style={{fontSize:11,color:"#888"}}>Libellé *</label>
+            <input autoFocus value={label} onChange={e=>setLabel(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&handleAdd()}
+              placeholder="ex: Remplacement chaudière"
+              style={{width:"100%",padding:"6px 10px",borderRadius:6,border:"1px solid #ddd",fontSize:13,boxSizing:"border-box",marginTop:3}} />
+          </div>
+          <div>
+            <label style={{fontSize:11,color:"#888"}}>Sous-titre <span style={{color:"#bbb"}}>(optionnel)</span></label>
+            <input value={sub} onChange={e=>setSub(e.target.value)}
+              placeholder="ex: CVC · Génie climatique"
+              style={{width:"100%",padding:"6px 10px",borderRadius:6,border:"1px solid #ddd",fontSize:13,boxSizing:"border-box",marginTop:3}} />
+          </div>
+          <div>
+            <label style={{fontSize:11,color:"#888",display:"block",marginBottom:6}}>Type</label>
+            <div style={{display:"flex",gap:10}}>
+              {["DTQ","DEV"].map(t=>(
+                <button key={t} onClick={()=>setType(t)}
+                  style={{flex:1,padding:"8px",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:13,
+                    border: type===t?"2px solid #185FA5":"1px solid #ddd",
+                    background: type===t?"#E6F1FB":"#f5f5f5",
+                    color: type===t?"#0C447C":"#555"}}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{fontSize:11,color:"#aaa",fontStyle:"italic"}}>Les budgets pourront être saisis directement dans le tableau.</div>
+        </div>
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
+          <button onClick={onClose}
+            style={{padding:"7px 16px",borderRadius:8,border:"1px solid #ddd",background:"#f5f5f5",cursor:"pointer",fontSize:12}}>
+            Annuler
+          </button>
+          <button onClick={handleAdd}
+            style={{padding:"7px 16px",borderRadius:8,border:"none",background:"#185FA5",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:600}}>
+            Ajouter
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ArbitrageModal({ lignes, AN, fmt, onIgnore, onClose, onApply }) {
   const [checked, setChecked] = useState(new Set(lignes.map(l=>l.id+l.annee)));
   const toggle = (key) => setChecked(prev=>{const n=new Set(prev);n.has(key)?n.delete(key):n.add(key);return n;});
@@ -447,7 +503,9 @@ export default function App() {
   const [arbitrageModal, setArbitrageModal] = useState(null); // {lignes: [{id, label, Bx}], year, col}
   const [dateSimu, setDateSimu]   = useState("2026-09-30");
   const [capexData, setCapexData] = useState(CAPEX_DATA); // données modifiables
-  const [reviseValide, setReviseValide] = useState(false); // révisé figé ?
+  const [reviseValide, setReviseValide] = useState(false);
+  const [validatedLines, setValidatedLines] = useState(new Set());
+  const [addLineModal, setAddLineModal] = useState(false); // ids des lignes validées individuellement // révisé figé ?
   const theadRef = useRef(null);
 
   useEffect(() => {
@@ -478,6 +536,7 @@ export default function App() {
   const simMois  = simDate.getMonth(); // 0-11
   const simJour  = simDate.getDate();
   const t = Math.min(0.999, Math.max(0.01, (simMois * 30 + simJour) / 365));
+  const isJan1 = simMois === 0 && simJour === 1;
   // Courbe logarithmique : progression rapide en début, ralentit vers la fin
   // coeff entre 0.05 (jan) et ~0.85 (déc) — jamais 1 pour ne pas atteindre le budgété
   const coeff = (e, f) => {
@@ -489,6 +548,7 @@ export default function App() {
 
   // Données simulées : E et F évoluent avec la courbe logarithmique
   const simData = capexData.map(a => {
+    if(isJan1) return {...a, os_total:0, facture:0, os:a.os.map(o=>({...o,montant:0,facture:0}))};
     const {e: ec, f: fc} = coeff(a.os_total, a.facture);
     // Valeurs max = B1 (budget de l'année), plancher = valeurs initiales au 1er jan
     const eMax = a.B1;
@@ -665,6 +725,7 @@ export default function App() {
                     setReports({});
                     setOverrides({});
                     setReviseValide(false);
+                    setValidatedLines(new Set());
                     setExpanded(new Set());
                     toast(`Exercice ${AN(0)} clôturé — bienvenue en ${AN(1)} !`,"success");
                   }
@@ -679,6 +740,16 @@ export default function App() {
           <span style={{ fontSize:11, background:"#f0efe9", border:"0.5px solid #ddd", borderRadius:20, padding:"3px 10px", color:"#888" }}>Démo SNK</span>
         </div>
       </div>
+
+      {addLineModal && <AddLineModal
+        AN={AN}
+        onClose={()=>setAddLineModal(false)}
+        onAdd={(newLine)=>{
+          setCapexData(prev=>[...prev, newLine]);
+          setAddLineModal(false);
+          toast(`"${newLine.label}" ajoutée au plan CAPEX.`,"success");
+        }}
+      />}
 
       {arbitrageModal && <ArbitrageModal
         lignes={arbitrageModal.lignes}
@@ -931,8 +1002,9 @@ export default function App() {
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
               const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
               const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
+              const isLineValidated = validatedLines.has(a.id);
+              const isBlocked = reviseValide || isLineValidated;
               const isLast   = ai===simData.length-1;
-              const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
               const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
               const rtColors = {far:"#27500A|#EAF3DE",ne:"#854F0B|#FAEEDA",nf:"#5C3D00|#FEF0D0",manu:"#0C447C|#E6F1FB",conserve:"#0C447C|#E6F1FB",full:"#3a0a6e|#ede0ff"};
@@ -1005,9 +1077,9 @@ export default function App() {
                     return (
                       <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,
                         background: isActive ? "#fffbe0" : "#fffef5",
-                        cursor: reviseValide ? "default" : "pointer", fontWeight: isActive ? 600 : 400 }}
-                        title={reviseValide ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
-                        onDoubleClick={()=>{ if(!reviseValide) setEditing({id:a.id,col:"B1rev"}); }}>
+                        cursor: isBlocked ? "default" : "pointer", fontWeight: isActive ? 600 : 400 }}
+                        title={isBlocked ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
+                        onDoubleClick={()=>{ if(!isBlocked) setEditing({id:a.id,col:"B1rev"}); }}>
                         {isB1RevEdit
                           ? <input autoFocus type="number" defaultValue={displayVal ?? a.B1}
                               onBlur={e=>{
@@ -1063,11 +1135,25 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee"}}>
                     {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                   </td>
-                  {/* Non facturé + menu ⋮ */}
+                  {/* Non facturé + menu ⋮ + bouton validation ligne */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide} />
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
+                      {validatedLines.has(a.id)
+                        ? <span title="Ligne validée" style={{fontSize:11,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>✓</span>
+                        : <button
+                            onClick={()=>setConfirmModal({
+                              msg:`Valider le révisé pour "${a.label}" ? Cette ligne sera figée définitivement.`,
+                              onConfirm:()=>{
+                                setValidatedLines(prev=>new Set([...prev,a.id]));
+                                toast(`"${a.label}" validée et figée.`,"success");
+                              }
+                            })}
+                            title="Valider le révisé de cette ligne"
+                            style={{fontSize:10,padding:"1px 5px",borderRadius:4,border:"0.5px solid #aabbd0",
+                              background:"#f0f5ff",color:"#2a5a8a",cursor:"pointer",fontWeight:600}}>✓</button>
+                      }
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
@@ -1083,9 +1169,9 @@ export default function App() {
                         </td>
                         <td key={col} style={{padding:"4px 8px",borderBottom:bbot,textAlign:"right",verticalAlign:"middle",
                           background:dispVal!==null?"#fffbe0":"#fffef5",
-                          cursor: reviseValide ? "default" : "text", fontSize:13}}
-                          title={reviseValide ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
-                          onDoubleClick={()=>{ if(!reviseValide) setEditing({id:a.id,col}); }}>
+                          cursor: isBlocked ? "default" : "text", fontSize:13}}
+                          title={isBlocked ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
+                          onDoubleClick={()=>{ if(!isBlocked) setEditing({id:a.id,col}); }}>
                           {isEdit
                             ? <input autoFocus type="number" defaultValue={dispVal??a[init]}
                                 onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){const tot0=a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;const cur=overrides[a.id]||{};const nr=(cur.B1rev??a.B1)+(col==="B2rev"?v:(cur.B2rev??a.B2))+(col==="B3rev"?v:(cur.B3rev??a.B3))+(col==="B4rev"?v:(cur.B4rev??a.B4))+(col==="B5rev"?v:(cur.B5rev??a.B5))+(col==="B6rev"?v:(cur.B6rev??a.B6));if(nr>tot0){setEditing(null);setConfirmModal({msg:`Le total du budget révisé (${fmt(nr)}) est supérieur au budget initial (${fmt(tot0)}) ; confirmez-vous la saisie ?`,onConfirm:()=>setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}))});}else{setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}));setEditing(null);}}else setEditing(null);}}
@@ -1111,16 +1197,31 @@ export default function App() {
                       </>
                     );
                   })}
-                  {/* Commentaire */}
+                  {/* Commentaire + suppression pour lignes custom */}
                   <td style={{padding:"4px 8px",borderBottom:bbot,borderLeft:"1px solid #ddd",verticalAlign:"middle"}}>
-                    <textarea
-                      value={comments[a.id]||""}
-                      onChange={e=>setComments(p=>({...p,[a.id]:e.target.value}))}
-                      placeholder="Ajouter un commentaire…"
-                      rows={2}
-                      style={{width:"100%",fontSize:11,padding:"4px 6px",border:"0.5px solid #ddd",borderRadius:4,
-                        resize:"vertical",fontFamily:"inherit",color:"#555",background:"#fafaf8",outline:"none",
-                        minWidth:160}} />
+                    <div style={{display:"flex",alignItems:"flex-start",gap:4}}>
+                      <textarea
+                        value={comments[a.id]||""}
+                        onChange={e=>setComments(p=>({...p,[a.id]:e.target.value}))}
+                        placeholder="Ajouter un commentaire…"
+                        rows={2}
+                        style={{flex:1,fontSize:11,padding:"4px 6px",border:"0.5px solid #ddd",borderRadius:4,
+                          resize:"vertical",fontFamily:"inherit",color:"#555",background:"#fafaf8",outline:"none",
+                          minWidth:140}} />
+                      {a.id.startsWith("custom_") && (
+                        <button onClick={()=>setConfirmModal({
+                          msg:`Supprimer "${a.label}" ? Cette action est irréversible.`,
+                          onConfirm:()=>{
+                            setCapexData(prev=>prev.filter(x=>x.id!==a.id));
+                            toast(`"${a.label}" supprimée.`,"info");
+                          }
+                        })}
+                          title="Supprimer cette ligne"
+                          style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"#ccc",padding:"2px",flexShrink:0}}
+                          onMouseEnter={e=>e.target.style.color="#c04040"}
+                          onMouseLeave={e=>e.target.style.color="#ccc"}>🗑</button>
+                      )}
+                    </div>
                   </td>
                 </tr>,
 
@@ -1241,6 +1342,13 @@ export default function App() {
             </tr>
           </tbody>
         </table>
+        <div style={{padding:"8px 12px",borderTop:"0.5px solid #eee"}}>
+          <button onClick={()=>setAddLineModal(true)}
+            style={{fontSize:12,padding:"5px 12px",borderRadius:6,border:"0.5px solid #185FA5",
+              background:"#E6F1FB",color:"#0C447C",cursor:"pointer",fontWeight:600}}>
+            + Ajouter une opération CAPEX
+          </button>
+        </div>
       </div>
 
     </div>
