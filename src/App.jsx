@@ -787,15 +787,15 @@ export default function App() {
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNE)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNF)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB2init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasB2rev?fmt(totB2rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB2rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB3init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasB3rev?fmt(totB3rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB3rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB4init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasB4rev?fmt(totB4rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB4rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB5init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasB5rev?fmt(totB5rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB5rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB6init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasB6rev?fmt(totB6rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB6rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{borderBottom:"none",borderLeft:"1px solid #e0e0e0",background:"#1a1a18"}}></td>
             </tr>
           </tbody>
