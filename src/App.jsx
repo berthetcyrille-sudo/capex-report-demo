@@ -1127,10 +1127,25 @@ export default function App() {
                                   validatedLines.has(a.id)
                                     ? <span title="Budget validé" style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",flexShrink:0}}>✓ validé</span>
                                     : <button onClick={()=>setConfirmModal({
-                                          msg:`Valider le budget de "${a.label}" à ${fmt(displayVal)} ? Cette ligne sera figée définitivement.`,
-                                          onConfirm:()=>{ setValidatedLines(prev=>new Set([...prev,a.id])); toast(`"${a.label}" validée.`,"success"); }
+                                          msg:`Valider le budget de "${a.label}" à ${fmt(displayVal)} ? Ce montant sera transféré en budget validé et la ligne sera figée.`,
+                                          onConfirm:()=>{
+                                            // Transférer B1rev → B1 validé
+                                            setCapexData(prev=>prev.map(x=>x.id===a.id ? {...x, B1: displayVal} : x));
+                                            // Effacer le override B1rev
+                                            setOverrides(prev=>{
+                                              const next={...prev};
+                                              if(next[a.id]?.B1rev!==undefined){
+                                                const {B1rev,...rest}=next[a.id];
+                                                if(Object.keys(rest).length) next[a.id]=rest;
+                                                else delete next[a.id];
+                                              }
+                                              return next;
+                                            });
+                                            setValidatedLines(prev=>new Set([...prev,a.id]));
+                                            toast(`"${a.label}" — ${fmt(displayVal)} transféré en budget validé.`,"success");
+                                          }
                                         })}
-                                        title="Valider ce budget"
+                                        title="Valider et transférer en budget validé"
                                         style={{fontSize:10,padding:"1px 6px",borderRadius:4,border:"0.5px solid #3A7A4A",
                                           background:"#EAF3DE",color:"#27500A",cursor:"pointer",fontWeight:600,flexShrink:0,whiteSpace:"nowrap"}}>
                                         ✓ Valider
