@@ -142,7 +142,7 @@ function InputRow({ label, max, onApply }) {
 }
 
 // ─── Input row "conserver" ───────────────────────────────────────────────────
-function InputRowConserve({ facture, budget, onApply }) {
+function InputRowConserve({ facture, budget, onApply, AN }) {
   const [raw, setRaw] = useState("");
   const saisi = parseInt(raw.replace(/\s/g,""))||0;
   const factureEur = facture;
@@ -191,7 +191,7 @@ function InputRowConserve({ facture, budget, onApply }) {
 }
 
 // ─── Menu contextuel actif ───────────────────────────────────────────────────
-function CtxMenu({ a, reports, setReports, setOverrides, toast }) {
+function CtxMenu({ a, reports, setReports, setOverrides, toast, AN }) {
   const [open, setOpen]               = useState(false);
   const [showManu, setShowManu]       = useState(false);
   const [showConserve, setShowConserve] = useState(false);
@@ -292,7 +292,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast }) {
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
               {bmf>0 && <>
                 <CtxItem label="Saisir le budget complémentaire à conserver et reporter le solde" tipKey="conserve" onClick={()=>setShowConserve(s=>!s)} />
-                {showConserve && <InputRowConserve facture={a.facture} budget={a.budget} onApply={v=>apply("conserve",v)} />}
+                {showConserve && <InputRowConserve facture={a.facture} budget={a.budget} onApply={v=>apply("conserve",v)} AN={AN} />}
               </>}
             </>}
             {hasReport && <>
@@ -713,7 +713,7 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} />
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} />
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
