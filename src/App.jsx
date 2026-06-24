@@ -512,18 +512,18 @@ export default function App() {
   const totB2init  = capexData.reduce((s,a)=>s+a.B2,0);
   const totB2rev   = capexData.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
-    if(ovr!==undefined && ovr!==a.B2) return s+ovr; // override manuel réel
-    if(rep>0) return s+(a.B2+rep); // report actif
-    return s; // pas de révision → ne contribue pas au total révisé
+    if(ovr!==undefined) return s+ovr;
+    if(rep>0) return s+(a.B2+rep);
+    return s;
   },0);
   const totB3init  = capexData.reduce((s,a)=>s+a.B3,0);
-  const totB3rev   = capexData.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined&&overrides[a.id].B3rev!==a.B3 ? s+overrides[a.id].B3rev : s, 0);
+  const totB3rev   = capexData.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined ? s+overrides[a.id].B3rev : s, 0);
   const totB4init  = capexData.reduce((s,a)=>s+a.B4,0);
-  const totB4rev   = capexData.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined&&overrides[a.id].B4rev!==a.B4 ? s+overrides[a.id].B4rev : s, 0);
+  const totB4rev   = capexData.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined ? s+overrides[a.id].B4rev : s, 0);
   const totB5init  = capexData.reduce((s,a)=>s+a.B5,0);
-  const totB5rev   = capexData.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined&&overrides[a.id].B5rev!==a.B5 ? s+overrides[a.id].B5rev : s, 0);
+  const totB5rev   = capexData.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined ? s+overrides[a.id].B5rev : s, 0);
   const totB6init  = capexData.reduce((s,a)=>s+a.B6,0);
-  const totB6rev   = capexData.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined&&overrides[a.id].B6rev!==a.B6 ? s+overrides[a.id].B6rev : s, 0);
+  const totB6rev   = capexData.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined ? s+overrides[a.id].B6rev : s, 0);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
   // Total révisé = initial des lignes non révisées + révisé des lignes révisées
   const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
