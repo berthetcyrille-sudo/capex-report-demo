@@ -62,7 +62,7 @@ const CAPEX_DATA = [
 
 const TIPS = {
   full:     "Reporter l'intégralité du budget 2026 sur 2027. Disponible uniquement si aucun OS n'a été ouvert sur cette opération.",
-  ne:       "Reporter sur 2027 le budget sans OS : solde budgétaire non couvert par un ordre de service (NE = B1 − E). Nécessite validation DAF.",
+  ne:       "Reporter sur 2027 le budget sans OS : solde budgétaire non couvert par un ordre de service (NE = B1 − E).",
   far:      "Reporter sur 2027 les Factures À Recevoir sur OS émis : FAR = E − F. Ces sommes sont juridiquement engagées.",
   nf:       "Reporter sur 2027 le budget non facturé : NF = B1 − F. Inclut les FAR et le solde non engagé.",
   manu:     "Reporter sur 2027 un montant saisi manuellement. Utile pour un arbitrage partiel.",
@@ -366,23 +366,40 @@ export default function App() {
   const totB1init  = CAPEX_DATA.reduce((s,a)=>s+a.B1,0);
   const totB1rev   = CAPEX_DATA.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B1rev;
-    return s+(ovr!==undefined ? ovr : rep>0 ? a.B1-rep : a.B1);
+    if(ovr!==undefined) return s+ovr;
+    if(rep>0) return s+(a.B1-rep);
+    return s; // pas de révision → ne contribue pas au total révisé
   },0);
   const totB2init  = CAPEX_DATA.reduce((s,a)=>s+a.B2,0);
   const totB2rev   = CAPEX_DATA.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
-    return s+(ovr!==undefined ? ovr : rep>0 ? a.B2+rep : a.B2);
+    if(ovr!==undefined) return s+ovr;
+    if(rep>0) return s+(a.B2+rep);
+    return s;
   },0);
   const totB3init  = CAPEX_DATA.reduce((s,a)=>s+a.B3,0);
-  const totB3rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B3rev ?? a.B3),0);
+  const totB3rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined ? s+overrides[a.id].B3rev : s, 0);
   const totB4init  = CAPEX_DATA.reduce((s,a)=>s+a.B4,0);
-  const totB4rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B4rev ?? a.B4),0);
+  const totB4rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined ? s+overrides[a.id].B4rev : s, 0);
   const totB5init  = CAPEX_DATA.reduce((s,a)=>s+a.B5,0);
-  const totB5rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B5rev ?? a.B5),0);
+  const totB5rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined ? s+overrides[a.id].B5rev : s, 0);
   const totB6init  = CAPEX_DATA.reduce((s,a)=>s+a.B6,0);
-  const totB6rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B6rev ?? a.B6),0);
+  const totB6rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined ? s+overrides[a.id].B6rev : s, 0);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
-  const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
+  // Total révisé = initial des lignes non révisées + révisé des lignes révisées
+  const totRevise  = CAPEX_DATA.reduce((s,a)=>{
+    const rep=calcTotalReport(a,reports);
+    const ovr=overrides[a.id]||{};
+    const hasRev=rep>0||Object.keys(ovr).some(k=>k.endsWith("rev"));
+    if(!hasRev) return s+(a.B1+a.B2+a.B3+a.B4+a.B5+a.B6);
+    const b1=ovr.B1rev!==undefined?ovr.B1rev:(rep>0?a.B1-rep:a.B1);
+    const b2=ovr.B2rev!==undefined?ovr.B2rev:(rep>0?a.B2+rep:a.B2);
+    const b3=ovr.B3rev!==undefined?ovr.B3rev:a.B3;
+    const b4=ovr.B4rev!==undefined?ovr.B4rev:a.B4;
+    const b5=ovr.B5rev!==undefined?ovr.B5rev:a.B5;
+    const b6=ovr.B6rev!==undefined?ovr.B6rev:a.B6;
+    return s+b1+b2+b3+b4+b5+b6;
+  },0);
   const hasAnyRev  = totReport>0 || CAPEX_DATA.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
@@ -782,7 +799,7 @@ export default function App() {
               </td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38",color:"#fff"}}>{fmt(totB1init)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>
-                {totReport>0?fmt(totB1rev):<span style={{color:"#666"}}>—</span>}
+                {hasAnyRev?fmt(totB1rev):<span style={{color:"#666"}}>—</span>}
               </td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #2a4a2a",background:"#1a3020",color:"#7ecfaa"}}>{fmt(totOS)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#1a3020",color:"#7ecfaa"}}>{fmt(totFac)}</td>
@@ -790,15 +807,15 @@ export default function App() {
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNE)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a1808"}}>{fmt(totNF)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB2init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB2rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{totB2rev>0?fmt(totB2rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB3init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB3rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{totB3rev>0?fmt(totB3rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB4init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB4rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{totB4rev>0?fmt(totB4rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB5init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB5rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{totB5rev>0?fmt(totB5rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #d0d8e8",background:"#1e2a38"}}>{fmt(totB6init)}</td>
-              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{hasAnyRev?fmt(totB6rev):<span style={{color:"#666"}}>—</span>}</td>
+              <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd"}}>{totB6rev>0?fmt(totB6rev):<span style={{color:"#666"}}>—</span>}</td>
               <td style={{borderBottom:"none",borderLeft:"1px solid #e0e0e0",background:"#1a1a18"}}></td>
             </tr>
           </tbody>
