@@ -367,11 +367,11 @@ export default function App() {
         top += row.offsetHeight;
       });
     };
-    applySticky();
-    // Re-appliquer si la fenêtre change de taille
+    // Laisser le DOM se mettre à jour avant de mesurer
+    const timer = setTimeout(applySticky, 0);
     window.addEventListener("resize", applySticky);
-    return () => window.removeEventListener("resize", applySticky);
-  }, [anneeRef]); // recalculer si l'année change
+    return () => { clearTimeout(timer); window.removeEventListener("resize", applySticky); };
+  });
 
   const anneeRef = new Date(dateSimu).getFullYear() || 2026;
   const AN = (n) => anneeRef + n; // {msg, onConfirm}
