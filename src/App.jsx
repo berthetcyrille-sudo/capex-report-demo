@@ -463,8 +463,8 @@ export default function App() {
         .capex-table { border-collapse: separate; border-spacing: 0; }
         .capex-table td, .capex-table th { border-bottom: 0.5px solid #eee; }
         .capex-table thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 20; height: 28px; }
-        .capex-table thead tr:nth-child(2) th { position: sticky; top: 28px; z-index: 20; height: 28px; }
-        .capex-table thead tr:nth-child(3) th { position: sticky; top: 56px; z-index: 20; height: 42px; }
+        .capex-table thead tr:nth-child(2) th { position: sticky; top: 28px; z-index: 20; height: 36px; }
+        .capex-table thead tr:nth-child(3) th { position: sticky; top: 64px; z-index: 20; height: 42px; }
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
