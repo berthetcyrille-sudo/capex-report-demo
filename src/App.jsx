@@ -542,18 +542,19 @@ export default function App() {
                 const col = `B${i+1}rev`;
                 const yr = AN(i);
                 const handleReset = () => {
-                  const targetCol = `B${i+2}rev`;
-                  const targetYr  = AN(i);
-                  const initKey   = `B${i+2}`;
+                  const targetYr = AN(i);
+                  const bKey = `B${i+2}`;
+                  const bRevKey = `B${i+2}rev`;
                   setConfirmModal({
                     msg:`Remettre le budget révisé ${targetYr} au niveau du budget validé pour toutes les lignes ?`,
                     onConfirm:()=>{
-                      setOverrides(prev=>{
+                      setOverrides(prev => {
                         const next = {...prev};
-                        CAPEX_DATA.forEach(a=>{
-                          next[a.id] = {...(next[a.id]||{}), [targetCol]: a[initKey]};
-                        });
-                        return next;
+                        for (const a of CAPEX_DATA) {
+                          const val = a[bKey]; // nombre ex: 400000
+                          next[a.id] = { ...(next[a.id] || {}), [bRevKey]: val };
+                        }
+                        return {...next}; // forcer nouvelle référence
                       });
                       toast(`Budget révisé ${targetYr} remis au niveau du validé.`, "success");
                     }
