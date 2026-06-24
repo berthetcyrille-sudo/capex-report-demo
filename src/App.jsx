@@ -363,14 +363,14 @@ export default function App() {
           th.style.position = "sticky";
           th.style.top = top + "px";
           th.style.zIndex = "20";
+          th.style.background = th.style.background || "inherit";
         });
-        top += row.offsetHeight;
+        top += row.getBoundingClientRect().height;
       });
     };
-    // Laisser le DOM se mettre à jour avant de mesurer
-    const timer = setTimeout(applySticky, 0);
+    const raf = requestAnimationFrame(applySticky);
     window.addEventListener("resize", applySticky);
-    return () => { clearTimeout(timer); window.removeEventListener("resize", applySticky); };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", applySticky); };
   });
 
   const anneeRef = new Date(dateSimu).getFullYear() || 2026;
