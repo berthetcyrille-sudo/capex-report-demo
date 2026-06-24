@@ -363,22 +363,23 @@ export default function App() {
   const totNF      = CAPEX_DATA.reduce((s,a)=>s+calcNF(a),0);
   const totReport  = CAPEX_DATA.reduce((s,a)=>s+calcTotalReport(a,reports),0);
   const totB1init  = CAPEX_DATA.reduce((s,a)=>s+a.B1,0);
-  const totB1rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B1rev ?? (a.B1-calcTotalReport(a,reports))),0);
+  const totB1rev   = CAPEX_DATA.reduce((s,a)=>{
+    const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B1rev;
+    return s+(ovr!==undefined ? ovr : rep>0 ? a.B1-rep : a.B1);
+  },0);
   const totB2init  = CAPEX_DATA.reduce((s,a)=>s+a.B2,0);
-  const totB2rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B2rev ?? (calcTotalReport(a,reports)>0 ? a.B2+calcTotalReport(a,reports) : a.B2)),0);
+  const totB2rev   = CAPEX_DATA.reduce((s,a)=>{
+    const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
+    return s+(ovr!==undefined ? ovr : rep>0 ? a.B2+rep : a.B2);
+  },0);
   const totB3init  = CAPEX_DATA.reduce((s,a)=>s+a.B3,0);
   const totB3rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B3rev ?? a.B3),0);
   const totB4init  = CAPEX_DATA.reduce((s,a)=>s+a.B4,0);
   const totB4rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B4rev ?? a.B4),0);
   const totB5init  = CAPEX_DATA.reduce((s,a)=>s+a.B5,0);
   const totB5rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B5rev ?? a.B5),0);
-  const hasB2rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B2rev!==undefined || calcTotalReport(a,reports)>0);
-  const hasB3rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B3rev!==undefined);
-  const hasB4rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B4rev!==undefined);
-  const hasB5rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B5rev!==undefined);
   const totB6init  = CAPEX_DATA.reduce((s,a)=>s+a.B6,0);
   const totB6rev   = CAPEX_DATA.reduce((s,a)=>s+(overrides[a.id]?.B6rev ?? a.B6),0);
-  const hasB6rev   = CAPEX_DATA.some(a=>overrides[a.id]?.B6rev!==undefined);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
   const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
   const hasAnyRev  = totReport>0 || CAPEX_DATA.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
@@ -554,7 +555,8 @@ export default function App() {
               const B5rev    = overrides[a.id]?.B5rev ?? null;
               const B6rev    = overrides[a.id]?.B6rev ?? null;
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
-              const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (B3rev??a.B3) + (B4rev??a.B4) + (B5rev??a.B5) + (B6rev??a.B6);
+              const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
+              const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
               const isLast   = ai===CAPEX_DATA.length-1;
               const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
@@ -587,9 +589,9 @@ export default function App() {
                   </td>
                   {/* Total révisé */}
                   <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,borderRight:"1px solid #444",
-                    background: totalRev!==totalInit ? "#fffbe0" : "#fafaf8",
-                    color: totalRev!==totalInit ? "#b05000" : "#ccc", fontWeight: totalRev!==totalInit ? 600 : 400}}>
-                    {totalRev!==totalInit ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}
+                    background: hasRowRev ? "#fffbe0" : "#fafaf8",
+                    color: hasRowRev ? "#b05000" : "#ccc", fontWeight: hasRowRev ? 600 : 400}}>
+                    {hasRowRev ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* B1 initial */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#555"}}>
