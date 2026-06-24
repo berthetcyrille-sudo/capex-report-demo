@@ -543,14 +543,22 @@ export default function App() {
                   msg:`Clôturer l'exercice ${AN(0)} et basculer en ${AN(1)} ?\n\n• Le révisé ${AN(1)} deviendra le budget validé ${AN(1)}\n• E et F seront remis à 0\n• L'historique ${AN(0)} sera archivé`,
                   onConfirm:()=>{
                     setCapexData(prev => prev.map(a => {
-                      // Calculer les nouveaux budgets : Bx' → Bx-1
-                      const getB = (n) => overrides[a.id]?.[`B${n}rev`] ?? (n===2&&calcTotalReport(a,reports)>0 ? a[`B${n}`]+calcTotalReport(a,reports) : a[`B${n}`]);
-                      const newB1 = getB(2); // B2' → B1
-                      const newB2 = overrides[a.id]?.B3rev ?? a.B3;
-                      const newB3 = overrides[a.id]?.B4rev ?? a.B4;
-                      const newB4 = overrides[a.id]?.B5rev ?? a.B5;
-                      const newB5 = overrides[a.id]?.B6rev ?? a.B6;
-                      const newB6 = 0; // nouvelle année à construire
+                      const rep = calcTotalReport(a, reports);
+                      // B2' = override si différent du validé, sinon B2 + report si report actif
+                      const getB = (n) => {
+                        const ovr = overrides[a.id]?.[`B${n}rev`];
+                        const init = a[`B${n}`];
+                        // Si override = valeur initiale (set par ↺), on ignore et applique la formule
+                        if (ovr !== undefined && ovr !== init) return ovr;
+                        if (n === 2 && rep > 0) return init + rep;
+                        return init;
+                      };
+                      const newB1 = getB(2);
+                      const newB2 = getB(3);
+                      const newB3 = getB(4);
+                      const newB4 = getB(5);
+                      const newB5 = getB(6);
+                      const newB6 = 0;
                       // Archiver l'année en cours dans l'historique
                       const newHisto = [...(a.historique||[]), {
                         annee: AN(0),
