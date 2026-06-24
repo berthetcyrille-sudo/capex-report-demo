@@ -809,7 +809,13 @@ export default function App() {
             </tr>
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
-              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}></th>
+              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}>
+                <button onClick={()=>setAddLineModal(true)}
+                  style={{fontSize:11,padding:"3px 10px",borderRadius:6,border:"0.5px solid #185FA5",
+                    background:"#E6F1FB",color:"#0C447C",cursor:"pointer",fontWeight:600}}>
+                  + Ajouter une opération
+                </button>
+              </th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
                   <span>Budget pluriannuel</span>
@@ -1103,18 +1109,33 @@ export default function App() {
                               onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                               style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                           : isActive
-                            ? <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
-                                onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
-                                onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
-                                <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
-                                {detail() && <>
-                                  <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
-                                  <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
-                                    width:220,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
-                                    fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
-                                    {detail()}
-                                  </div>
-                                </>}
+                            ? <div style={{display:"flex",alignItems:"center",gap:4,justifyContent:"flex-end"}}>
+                                <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
+                                  onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
+                                  onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
+                                  <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
+                                  {detail() && <>
+                                    <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
+                                    <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
+                                      width:220,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
+                                      fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
+                                      {detail()}
+                                    </div>
+                                  </>}
+                                </div>
+                                {a.id.startsWith("custom_") && (
+                                  validatedLines.has(a.id)
+                                    ? <span title="Budget validé" style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",flexShrink:0}}>✓ validé</span>
+                                    : <button onClick={()=>setConfirmModal({
+                                          msg:`Valider le budget de "${a.label}" à ${fmt(displayVal)} ? Cette ligne sera figée définitivement.`,
+                                          onConfirm:()=>{ setValidatedLines(prev=>new Set([...prev,a.id])); toast(`"${a.label}" validée.`,"success"); }
+                                        })}
+                                        title="Valider ce budget"
+                                        style={{fontSize:10,padding:"1px 6px",borderRadius:4,border:"0.5px solid #3A7A4A",
+                                          background:"#EAF3DE",color:"#27500A",cursor:"pointer",fontWeight:600,flexShrink:0,whiteSpace:"nowrap"}}>
+                                        ✓ Valider
+                                      </button>
+                                )}
                               </div>
                             : <span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span>}
                       </td>
@@ -1141,20 +1162,6 @@ export default function App() {
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
                       <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
-                      {validatedLines.has(a.id)
-                        ? <span title="Ligne validée" style={{fontSize:11,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>✓</span>
-                        : <button
-                            onClick={()=>setConfirmModal({
-                              msg:`Valider le révisé pour "${a.label}" ? Cette ligne sera figée définitivement.`,
-                              onConfirm:()=>{
-                                setValidatedLines(prev=>new Set([...prev,a.id]));
-                                toast(`"${a.label}" validée et figée.`,"success");
-                              }
-                            })}
-                            title="Valider le révisé de cette ligne"
-                            style={{fontSize:10,padding:"1px 5px",borderRadius:4,border:"0.5px solid #aabbd0",
-                              background:"#f0f5ff",color:"#2a5a8a",cursor:"pointer",fontWeight:600}}>✓</button>
-                      }
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
@@ -1343,13 +1350,6 @@ export default function App() {
             </tr>
           </tbody>
         </table>
-        <div style={{padding:"8px 12px",borderTop:"0.5px solid #eee"}}>
-          <button onClick={()=>setAddLineModal(true)}
-            style={{fontSize:12,padding:"5px 12px",borderRadius:6,border:"0.5px solid #185FA5",
-              background:"#E6F1FB",color:"#0C447C",cursor:"pointer",fontWeight:600}}>
-            + Ajouter une opération CAPEX
-          </button>
-        </div>
       </div>
 
     </div>
