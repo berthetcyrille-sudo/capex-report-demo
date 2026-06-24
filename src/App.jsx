@@ -542,6 +542,7 @@ export default function App() {
               </th>
               <th style={{ ...thS, textAlign:"right", width:110, background:"#fffbe0" }}>
                 <span style={{ color:"#c08030", fontSize:10 }}>B1'=B1−report</span><br/><span style={{color:"#c08030"}}>Révisé</span>
+                <div style={{fontSize:9,color:"#bbb",fontWeight:400}}>✎ double-clic</div>
               </th>
               {/* 2026 — Engagé/Facturé */}
               <th style={{ ...thS, textAlign:"right", width:95, borderLeft:"1px solid #b0d8b8", background:"#F0F7F2" }}>
@@ -574,6 +575,7 @@ export default function App() {
                     </th>
                     <th key={b+"r"} style={{ ...thS, textAlign:"right", width:100, background:"#fffbe0" }}>
                       <span style={{color:"#c08030",fontSize:10}}>{b}' ✎</span><br/><span style={{color:"#c08030"}}>Révisé</span>
+                      <div style={{fontSize:9,color:"#bbb",fontWeight:400}}>✎ double-clic</div>
                     </th>
                   </>
                 );
@@ -657,9 +659,9 @@ export default function App() {
                     };
                     return (
                       <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,
-                        background: isActive ? "#fffbe0" : "#fafaf8",
-                        cursor:"pointer", fontWeight: isActive ? 600 : 400 }}
-                        title="Double-cliquez pour modifier"
+                        background: isActive ? "#fffbe0" : "#fffef5",
+                        cursor:"text", fontWeight: isActive ? 600 : 400 }}
+                        title="Double-cliquez pour modifier — valeur de départ = Budget validé"
                         onDoubleClick={()=>setEditing({id:a.id,col:"B1rev"})}>
                         {isB1RevEdit
                           ? <input autoFocus type="number" defaultValue={displayVal ?? a.B1}
@@ -687,7 +689,7 @@ export default function App() {
                                 <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
                                 {detail()}
                               </div>
-                            : <span style={{color:"#ccc"}}>—</span>}
+                            : <span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span>}
                       </td>
                     );
                   })()}
@@ -726,8 +728,8 @@ export default function App() {
                           {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}
                         </td>
                         <td key={col} style={{padding:"4px 8px",borderBottom:bbot,textAlign:"right",verticalAlign:"middle",
-                          background:dispVal!==null?"#fffbe0":"#fafaf8",cursor:"pointer",fontSize:13}}
-                          title="Double-cliquez pour modifier"
+                          background:dispVal!==null?"#fffbe0":"#fffef5",cursor:"text",fontSize:13}}
+                          title="Double-cliquez pour modifier — valeur de départ = Budget validé"
                           onDoubleClick={()=>setEditing({id:a.id,col})}>
                           {isEdit
                             ? <input autoFocus type="number" defaultValue={dispVal??a[init]}
@@ -741,7 +743,7 @@ export default function App() {
                                     <span style={{fontSize:10,color:"#7090CC"}}>{fmt(a[init])} +{fmt(totalRep)}</span>}
                                   {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
                                 </div>
-                              : <span style={{color:"#ccc"}}>—</span>}
+                              : <span style={{color:"#ccc",fontSize:11}}>= {a[init]>0?fmt(a[init]):"—"}</span>}
                         </td>
                       </>
                     );
