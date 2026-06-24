@@ -209,14 +209,15 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN }) {
     if (type==="manu" && (val<=0||val>bmf)) { toast(`Montant invalide. Max : ${fmt(bmf)}.`,"err"); return; }
     if (type==="conserve") { const r=Math.max(0,a.budget-a.facture-val); if(!r){ toast(`Solde = 0.`,"warning"); return; } }
 
-    // Effacer le override B1rev
+    // Effacer les overrides B1rev et B2rev pour laisser les formules automatiques reprendre
     setOverrides(prev => {
       const next = {...prev};
-      if (next[a.id]?.B1rev !== undefined) {
-        const {B1rev, ...rest} = next[a.id];
-        if (Object.keys(rest).length) next[a.id] = rest;
-        else delete next[a.id];
-      }
+      if (!next[a.id]) return next;
+      const cleaned = {...next[a.id]};
+      delete cleaned.B1rev;
+      delete cleaned.B2rev;
+      if (Object.keys(cleaned).length) next[a.id] = cleaned;
+      else delete next[a.id];
       return next;
     });
 
