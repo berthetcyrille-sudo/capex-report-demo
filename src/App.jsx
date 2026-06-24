@@ -625,19 +625,19 @@ export default function App() {
                     onClick={()=>{
                       if(reviseValide){ toast("Le révisé est validé — actions bloquées.","warning"); return; }
                       setConfirmModal({
-                        msg:`Remettre TOUS les budgets révisés (${AN(1)}→${AN(5)}) au niveau du budget validé pour toutes les lignes ?`,
+                        msg:`Remettre tous les budgets révisés (${AN(2)}→${AN(5)}) au niveau du budget validé pour toutes les lignes ?`,
                         onConfirm:()=>{
                           setOverrides(prev=>{
                             const next = {...prev};
                             for(const a of capexData){
-                              for(let j=1;j<=5;j++){
+                              for(let j=2;j<=5;j++){
                                 const bRevKey=`B${j+1}rev`;
                                 next[a.id]={...(next[a.id]||{}),[bRevKey]:a[`B${j+1}`]};
                               }
                             }
                             return {...next};
                           });
-                          toast(`Tous les budgets révisés ${AN(1)}→${AN(5)} remis au niveau du validé.`,"success");
+                          toast(`Tous les budgets révisés ${AN(2)}→${AN(5)} remis au niveau du validé.`,"success");
                         }
                       });
                     }}
