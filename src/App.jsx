@@ -618,7 +618,39 @@ export default function App() {
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
               <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}></th>
-              <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>Budget pluriannuel</th>
+              <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
+                  <span>Budget pluriannuel</span>
+                  <button
+                    onClick={()=>{
+                      if(reviseValide){ toast("Le révisé est validé — actions bloquées.","warning"); return; }
+                      setConfirmModal({
+                        msg:`Remettre TOUS les budgets révisés (${AN(1)}→${AN(5)}) au niveau du budget validé pour toutes les lignes ?`,
+                        onConfirm:()=>{
+                          setOverrides(prev=>{
+                            const next = {...prev};
+                            for(const a of capexData){
+                              for(let j=1;j<=5;j++){
+                                const bRevKey=`B${j+1}rev`;
+                                next[a.id]={...(next[a.id]||{}),[bRevKey]:a[`B${j+1}`]};
+                              }
+                            }
+                            return {...next};
+                          });
+                          toast(`Tous les budgets révisés ${AN(1)}→${AN(5)} remis au niveau du validé.`,"success");
+                        }
+                      });
+                    }}
+                    style={{fontSize:9,padding:"1px 6px",borderRadius:5,
+                      border: reviseValide?"1px solid #ccc":"1px solid #aabbd0",
+                      background: reviseValide?"#f5f5f5":"#f0f5ff",
+                      color: reviseValide?"#ccc":"#2a5a8a",
+                      cursor: reviseValide?"default":"pointer",
+                      fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}>
+                    ↺ Tout au validé
+                  </button>
+                </div>
+              </th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#e8eff8", borderLeft:"1px solid #d0d8e8", fontSize:11 }}>Budget</th>
               <th colSpan={2} style={{ ...thG, color:"#3A7A4A", background:"#e0f0e8", borderLeft:"1px solid #b0d8b8", fontSize:11 }}>Engagé / Facturé {AN(0)} (EVEN)</th>
               <th colSpan={3} style={{ ...thG, color:"#8a4020", background:"#f8e8d8", borderLeft:"1px solid #d8b898", fontSize:11 }}>
@@ -660,6 +692,7 @@ export default function App() {
                   </button>
                 </div>
               </th>
+              {/* Bouton global ↺ dans le header Budget pluriannuel */}
               {[1,2,3,4,5].map(i => {
                 const col = `B${i+1}rev`;
                 const yr = AN(i);
