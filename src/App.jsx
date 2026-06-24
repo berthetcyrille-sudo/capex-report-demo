@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // AN(n) est recalculé dynamiquement depuis le state dateSimu dans App
 
@@ -351,6 +351,27 @@ export default function App() {
   const [comments, setComments]   = useState({});
   const [confirmModal, setConfirmModal] = useState(null);
   const [dateSimu, setDateSimu]   = useState("2026-09-30");
+  const theadRef = useRef(null);
+
+  useEffect(() => {
+    const applySticky = () => {
+      if (!theadRef.current) return;
+      const rows = theadRef.current.querySelectorAll("tr");
+      let top = 0;
+      rows.forEach(row => {
+        row.querySelectorAll("th").forEach(th => {
+          th.style.position = "sticky";
+          th.style.top = top + "px";
+          th.style.zIndex = "20";
+        });
+        top += row.offsetHeight;
+      });
+    };
+    applySticky();
+    // Re-appliquer si la fenêtre change de taille
+    window.addEventListener("resize", applySticky);
+    return () => window.removeEventListener("resize", applySticky);
+  }, [anneeRef]); // recalculer si l'année change
 
   const anneeRef = new Date(dateSimu).getFullYear() || 2026;
   const AN = (n) => anneeRef + n; // {msg, onConfirm}
@@ -462,14 +483,11 @@ export default function App() {
       <style>{`
         .capex-table { border-collapse: separate; border-spacing: 0; }
         .capex-table td, .capex-table th { border-bottom: 0.5px solid #eee; }
-        .capex-table thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 20; height: 28px; }
-        .capex-table thead tr:nth-child(2) th { position: sticky; top: 28px; z-index: 20; height: 36px; }
-        .capex-table thead tr:nth-child(3) th { position: sticky; top: 64px; z-index: 20; height: 42px; }
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
         <table className="capex-table" style={{ width:"100%", fontSize:13, minWidth:1800 }}>
-          <thead>
+          <thead ref={theadRef}>
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
               <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12 }}>Identification</th>
@@ -524,20 +542,24 @@ export default function App() {
                 const col = `B${i+1}rev`;
                 const yr = AN(i);
                 const handleReset = () => {
-                  const targetCol = col;
+                  const targetCol = `B${i+1}rev`;
+                  const targetYr  = AN(i);
                   setConfirmModal({
-                    msg:`Remettre le budget révisé ${yr} au niveau du budget validé pour toutes les lignes ?`,
+                    msg:`Remettre le budget révisé ${targetYr} au niveau du budget validé pour toutes les lignes ?`,
                     onConfirm:()=>{
                       setOverrides(prev=>{
-                        const next = JSON.parse(JSON.stringify(prev)); // deep copy
+                        const next = {...prev};
                         CAPEX_DATA.forEach(a=>{
-                          if(next[a.id] && next[a.id][targetCol]!==undefined){
-                            delete next[a.id][targetCol];
-                            if(Object.keys(next[a.id]).length===0) delete next[a.id];
+                          if(next[a.id]?.[targetCol] !== undefined){
+                            const updated = {...next[a.id]};
+                            delete updated[targetCol];
+                            if(Object.keys(updated).length) next[a.id] = updated;
+                            else delete next[a.id];
                           }
                         });
                         return next;
                       });
+                      toast(`Budget révisé ${targetYr} remis au niveau du validé.`, "info");
                     }
                   });
                 };
