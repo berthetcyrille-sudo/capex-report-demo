@@ -4,55 +4,95 @@ import { useState, useRef, useEffect } from "react";
 
 const CAPEX_DATA = [
   { id:"pac",    label:"Remplacement PAC",                   sub:"CVC · Génie climatique",         type:"DTQ",
+    dateOuverture:2024,
+    historique:[
+      {annee:2024, B1:800000,  os_total:200000, facture:180000},
+      {annee:2025, B1:950000,  os_total:780000, facture:620000},
+    ],
     budget:1200000, os_total:980000, facture:740000,
     B1:1400000, B2:400000,  B3:0,       B4:0,       B5:0,       B6:0,
     os:[{id:"os041",label:"Dépose PAC + désamiantage",               montant:240000,facture:240000,statut:"solde"},
         {id:"os058",label:"Fourniture et pose PAC + GRS",             montant:740000,facture:500000,statut:"cours"}]},
   { id:"etudes", label:"Études préalables — restructuration R+3",    sub:"Maîtrise d'œuvre · Études",      type:"DEV",
+    dateOuverture:2026,
+    historique:[],
     budget:0,       os_total:0,      facture:0,
     B1:180000,  B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
     os:[]},
   { id:"facade", label:"Ravalement façades",                 sub:"Enveloppe · Gros œuvre",         type:"DEV",
+    dateOuverture:2025,
+    historique:[
+      {annee:2025, B1:1000000, os_total:850000, facture:400000},
+    ],
     budget:900000,  os_total:900000, facture:510000,
     B1:1200000, B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
     os:[{id:"os062",label:"Échafaudage + ravalement pierre de taille",montant:900000,facture:510000,statut:"cours"}]},
   { id:"toiture",label:"Réfection toiture terrasse",         sub:"Enveloppe · Étanchéité",         type:"DTQ",
+    dateOuverture:2025,
+    historique:[
+      {annee:2025, B1:600000,  os_total:320000, facture:180000},
+    ],
     budget:780000,  os_total:420000, facture:280000,
     B1:600000,  B2:480000,  B3:0,       B4:0,       B5:0,       B6:250000,
     os:[{id:"os071",label:"Étanchéité bicouche + isolation ITE",     montant:420000,facture:280000,statut:"cours"}]},
   { id:"ascens", label:"Remplacement ascenseurs",            sub:"Équipements · Mise aux normes",  type:"DTQ",
+    dateOuverture:2024,
+    historique:[
+      {annee:2024, B1:500000,  os_total:150000, facture:100000},
+      {annee:2025, B1:640000,  os_total:300000, facture:150000},
+    ],
     budget:640000,  os_total:390000, facture:190000,
     B1:800000,  B2:0,        B3:350000,  B4:0,       B5:0,       B6:0,
     os:[{id:"os074",label:"Dépose + fourniture 2 ascenseurs OTIS",   montant:390000,facture:190000,statut:"cours"}]},
   { id:"elec",   label:"Mise aux normes électriques",        sub:"Équipements · Réglementaire",    type:"DTQ",
+    dateOuverture:2026,
+    historique:[],
     budget:520000,  os_total:330000, facture:100000,
     B1:500000,  B2:0,        B3:0,       B4:420000,  B5:0,       B6:0,
     os:[{id:"os076",label:"TGBT + câblage divisionnaire RJ45",       montant:330000,facture:100000,statut:"cours"}]},
   { id:"lobby",  label:"Rénovation hall & parties communes", sub:"Aménagement · Repositionnement", type:"DEV",
+    dateOuverture:2025,
+    historique:[
+      {annee:2025, B1:900000,  os_total:180000, facture:30000},
+    ],
     budget:780000,  os_total:220000, facture:50000,
     B1:1100000, B2:650000,  B3:300000,  B4:0,       B5:500000,  B6:0,
     os:[{id:"os079",label:"MOE + études de conception hall",          montant:220000,facture:50000, statut:"tardif"}]},
   { id:"toitTerrasse2", label:"Réfection étanchéité parking",       sub:"Enveloppe · Étanchéité",         type:"DTQ",
+    dateOuverture:2026,
+    historique:[],
     budget:320000,  os_total:180000, facture:90000,
     B1:0,       B2:0,        B3:280000,  B4:0,       B5:0,       B6:0,
     os:[{id:"os081",label:"Étanchéité parking sous-sol niveaux −1 et −2", montant:180000,facture:90000,statut:"cours"}]},
   { id:"sprinkler",label:"Mise à niveau sprinklers",         sub:"Sécurité incendie · Réglementaire",type:"DTQ",
+    dateOuverture:2025,
+    historique:[
+      {annee:2025, B1:400000,  os_total:380000, facture:150000},
+    ],
     budget:450000,  os_total:450000, facture:210000,
     B1:0,       B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
     os:[{id:"os082",label:"Remplacement têtes + centrale détection",  montant:450000,facture:210000,statut:"cours"}]},
   { id:"sas",   label:"Création sas d'entrée",               sub:"Aménagement · Valorisation",     type:"DEV",
+    dateOuverture:2026,
+    historique:[],
     budget:0,       os_total:0,      facture:0,
     B1:650000,  B2:0,        B3:0,       B4:0,       B5:0,       B6:0,
     os:[]},
   { id:"vrd",   label:"Réfection VRD & espaces verts",       sub:"Extérieurs · Entretien",         type:"DTQ",
+    dateOuverture:2026,
+    historique:[],
     budget:175000,  os_total:80000,  facture:30000,
     B1:0,       B2:320000,   B3:0,       B4:0,       B5:0,       B6:0,
     os:[{id:"os083",label:"Reprise voirie + plantations",             montant:80000, facture:30000, statut:"cours"}]},
   { id:"bms",   label:"Déploiement BMS / GTC",               sub:"Smart building · Efficacité",    type:"DEV",
+    dateOuverture:2026,
+    historique:[],
     budget:0,       os_total:0,      facture:0,
     B1:890000,  B2:430000,   B3:0,       B4:0,       B5:0,       B6:0,
     os:[]},
   { id:"dpe",   label:"Travaux DPE — isolation combles",     sub:"Performance énergétique · RE2020",type:"DTQ",
+    dateOuverture:2026,
+    historique:[],
     budget:260000,  os_total:120000, facture:60000,
     B1:0,       B2:0,        B3:0,       B4:380000,  B5:0,       B6:0,
     os:[{id:"os084",label:"Isolation combles + remplacement fenêtres", montant:120000,facture:60000, statut:"cours"}]},
@@ -344,6 +384,7 @@ const thG = { // style groupe entête
 // ─── App ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [expanded, setExpanded]   = useState(new Set());
+  const [expandedHisto, setExpandedHisto] = useState(new Set());
   const [reports,  setReports]    = useState({});
   const [toastMsg, setToastMsg]   = useState(null);
   const [overrides,setOverrides]  = useState({});
@@ -351,6 +392,8 @@ export default function App() {
   const [comments, setComments]   = useState({});
   const [confirmModal, setConfirmModal] = useState(null);
   const [dateSimu, setDateSimu]   = useState("2026-09-30");
+  const [capexData, setCapexData] = useState(CAPEX_DATA); // données modifiables
+  const [reviseValide, setReviseValide] = useState(false); // révisé figé ?
   const theadRef = useRef(null);
 
   useEffect(() => {
@@ -380,38 +423,38 @@ export default function App() {
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
 
   // Totaux
-  const totBudget  = CAPEX_DATA.reduce((s,a)=>s+a.budget,0);
-  const totOS      = CAPEX_DATA.reduce((s,a)=>s+a.os_total,0);
-  const totFac     = CAPEX_DATA.reduce((s,a)=>s+a.facture,0);
-  const totFAR     = CAPEX_DATA.reduce((s,a)=>s+calcTfar(a),0);
-  const totNE      = CAPEX_DATA.reduce((s,a)=>s+calcNE(a),0);
-  const totNF      = CAPEX_DATA.reduce((s,a)=>s+calcNF(a),0);
-  const totReport  = CAPEX_DATA.reduce((s,a)=>s+calcTotalReport(a,reports),0);
-  const totB1init  = CAPEX_DATA.reduce((s,a)=>s+a.B1,0);
-  const totB1rev   = CAPEX_DATA.reduce((s,a)=>{
+  const totBudget  = capexData.reduce((s,a)=>s+a.budget,0);
+  const totOS      = capexData.reduce((s,a)=>s+a.os_total,0);
+  const totFac     = capexData.reduce((s,a)=>s+a.facture,0);
+  const totFAR     = capexData.reduce((s,a)=>s+calcTfar(a),0);
+  const totNE      = capexData.reduce((s,a)=>s+calcNE(a),0);
+  const totNF      = capexData.reduce((s,a)=>s+calcNF(a),0);
+  const totReport  = capexData.reduce((s,a)=>s+calcTotalReport(a,reports),0);
+  const totB1init  = capexData.reduce((s,a)=>s+a.B1,0);
+  const totB1rev   = capexData.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B1rev;
     if(ovr!==undefined) return s+ovr;
     if(rep>0) return s+(a.B1-rep);
     return s; // pas de révision → ne contribue pas au total révisé
   },0);
-  const totB2init  = CAPEX_DATA.reduce((s,a)=>s+a.B2,0);
-  const totB2rev   = CAPEX_DATA.reduce((s,a)=>{
+  const totB2init  = capexData.reduce((s,a)=>s+a.B2,0);
+  const totB2rev   = capexData.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
     if(ovr!==undefined) return s+ovr;
     if(rep>0) return s+(a.B2+rep);
     return s;
   },0);
-  const totB3init  = CAPEX_DATA.reduce((s,a)=>s+a.B3,0);
-  const totB3rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined ? s+overrides[a.id].B3rev : s, 0);
-  const totB4init  = CAPEX_DATA.reduce((s,a)=>s+a.B4,0);
-  const totB4rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined ? s+overrides[a.id].B4rev : s, 0);
-  const totB5init  = CAPEX_DATA.reduce((s,a)=>s+a.B5,0);
-  const totB5rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined ? s+overrides[a.id].B5rev : s, 0);
-  const totB6init  = CAPEX_DATA.reduce((s,a)=>s+a.B6,0);
-  const totB6rev   = CAPEX_DATA.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined ? s+overrides[a.id].B6rev : s, 0);
+  const totB3init  = capexData.reduce((s,a)=>s+a.B3,0);
+  const totB3rev   = capexData.reduce((s,a)=>overrides[a.id]?.B3rev!==undefined ? s+overrides[a.id].B3rev : s, 0);
+  const totB4init  = capexData.reduce((s,a)=>s+a.B4,0);
+  const totB4rev   = capexData.reduce((s,a)=>overrides[a.id]?.B4rev!==undefined ? s+overrides[a.id].B4rev : s, 0);
+  const totB5init  = capexData.reduce((s,a)=>s+a.B5,0);
+  const totB5rev   = capexData.reduce((s,a)=>overrides[a.id]?.B5rev!==undefined ? s+overrides[a.id].B5rev : s, 0);
+  const totB6init  = capexData.reduce((s,a)=>s+a.B6,0);
+  const totB6rev   = capexData.reduce((s,a)=>overrides[a.id]?.B6rev!==undefined ? s+overrides[a.id].B6rev : s, 0);
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
   // Total révisé = initial des lignes non révisées + révisé des lignes révisées
-  const totRevise  = CAPEX_DATA.reduce((s,a)=>{
+  const totRevise  = capexData.reduce((s,a)=>{
     const rep=calcTotalReport(a,reports);
     const ovr=overrides[a.id]||{};
     const hasRev=rep>0||Object.keys(ovr).some(k=>k.endsWith("rev"));
@@ -424,7 +467,7 @@ export default function App() {
     const b6=ovr.B6rev!==undefined?ovr.B6rev:a.B6;
     return s+b1+b2+b3+b4+b5+b6;
   },0);
-  const hasAnyRev  = totReport>0 || CAPEX_DATA.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
+  const hasAnyRev  = totReport>0 || capexData.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
   const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"3px 8px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap", lineHeight:"1.2" };
@@ -455,6 +498,79 @@ export default function App() {
                 }
               }}
               style={{ fontSize:13, border:"none", background:"transparent", cursor:"pointer", outline:"none", color:"#333" }} />
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+            {/* Bouton Valider le révisé */}
+            <button
+              onClick={()=>{
+                if(reviseValide){ toast("Le révisé est déjà validé.","warning"); return; }
+                setConfirmModal({
+                  msg:`Valider le révisé ${AN(0)} ? Les colonnes Révisé seront figées et ne pourront plus être modifiées.`,
+                  onConfirm:()=>{ setReviseValide(true); toast(`Révisé ${AN(0)} validé et figé.`,"success"); }
+                });
+              }}
+              style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",
+                border: reviseValide?"1px solid #3A7A4A":"1px solid #185FA5",
+                background: reviseValide?"#EAF3DE":"#E6F1FB",
+                color: reviseValide?"#27500A":"#0C447C"}}>
+              {reviseValide ? "✓ Révisé validé" : `Valider le révisé ${AN(0)}`}
+            </button>
+
+            {/* Bouton Clôturer l'exercice */}
+            <button
+              onClick={()=>{
+                if(!reviseValide){ toast("Veuillez d'abord valider le révisé avant de clôturer l'exercice.","err"); return; }
+                setConfirmModal({
+                  msg:`Clôturer l'exercice ${AN(0)} et basculer en ${AN(1)} ?\n\n• Le révisé ${AN(1)} deviendra le budget validé ${AN(1)}\n• E et F seront remis à 0\n• L'historique ${AN(0)} sera archivé`,
+                  onConfirm:()=>{
+                    setCapexData(prev => prev.map(a => {
+                      // Calculer les nouveaux budgets : Bx' → Bx-1
+                      const getB = (n) => overrides[a.id]?.[`B${n}rev`] ?? (n===2&&calcTotalReport(a,reports)>0 ? a[`B${n}`]+calcTotalReport(a,reports) : a[`B${n}`]);
+                      const newB1 = getB(2); // B2' → B1
+                      const newB2 = overrides[a.id]?.B3rev ?? a.B3;
+                      const newB3 = overrides[a.id]?.B4rev ?? a.B4;
+                      const newB4 = overrides[a.id]?.B5rev ?? a.B5;
+                      const newB5 = overrides[a.id]?.B6rev ?? a.B6;
+                      const newB6 = 0; // nouvelle année à construire
+                      // Archiver l'année en cours dans l'historique
+                      const newHisto = [...(a.historique||[]), {
+                        annee: AN(0),
+                        B1: a.B1,
+                        os_total: a.os_total,
+                        facture: a.facture,
+                      }];
+                      return {
+                        ...a,
+                        historique: newHisto,
+                        budget: 0,      // E et F remis à 0
+                        os_total: 0,
+                        facture: 0,
+                        B1: newB1,
+                        B2: newB2,
+                        B3: newB3,
+                        B4: newB4,
+                        B5: newB5,
+                        B6: newB6,
+                        os: a.os.map(o=>({...o, montant:0, facture:0, statut:"cours"})),
+                      };
+                    }));
+                    // Basculer l'année
+                    const newDate = `${AN(1)}-01-01`;
+                    setDateSimu(newDate);
+                    // Reset states
+                    setReports({});
+                    setOverrides({});
+                    setReviseValide(false);
+                    setExpanded(new Set());
+                    toast(`Exercice ${AN(0)} clôturé — bienvenue en ${AN(1)} !`,"success");
+                  }
+                });
+              }}
+              style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",
+                border:"1px solid #8a4020",background:"#fff3e8",color:"#8a4020",
+                opacity: reviseValide ? 1 : 0.5}}>
+              Clôturer l'exercice {AN(0)} →
+            </button>
           </div>
           <span style={{ fontSize:11, background:"#f0efe9", border:"0.5px solid #ddd", borderRadius:20, padding:"3px 10px", color:"#888" }}>Démo SNK</span>
         </div>
@@ -513,7 +629,7 @@ export default function App() {
                       onConfirm:()=>{
                         setReports(prev=>{
                           const next={...prev};
-                          CAPEX_DATA.forEach(a=>{
+                          capexData.forEach(a=>{
                             const nf=calcNF(a);
                             if(nf>0) next[a.id]={report:nf,rt:"nf"};
                           });
@@ -521,7 +637,7 @@ export default function App() {
                         });
                         setOverrides(prev=>{
                           const next={...prev};
-                          CAPEX_DATA.forEach(a=>{
+                          capexData.forEach(a=>{
                             if(next[a.id]?.B1rev!==undefined){
                               const {B1rev,...rest}=next[a.id];
                               if(Object.keys(rest).length) next[a.id]=rest;
@@ -550,7 +666,7 @@ export default function App() {
                     onConfirm:()=>{
                       setOverrides(prev => {
                         const next = {...prev};
-                        for (const a of CAPEX_DATA) {
+                        for (const a of capexData) {
                           const val = a[bKey]; // nombre ex: 400000
                           next[a.id] = { ...(next[a.id] || {}), [bRevKey]: val };
                         }
@@ -635,7 +751,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {CAPEX_DATA.map((a, ai) => {
+            {capexData.map((a, ai) => {
               const totalRep = calcTotalReport(a, reports);
               const rep      = reports[a.id];
               const ne       = calcNE(a);
@@ -650,7 +766,7 @@ export default function App() {
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
               const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
               const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
-              const isLast   = ai===CAPEX_DATA.length-1;
+              const isLast   = ai===capexData.length-1;
               const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
               const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
@@ -669,7 +785,19 @@ export default function App() {
                   </td>
                   {/* Label */}
                   <TD style={{borderBottom:bbot}}>
-                    <strong>{a.label}</strong><br/><span style={{color:"#aaa",fontSize:11}}>{a.sub}</span>
+                    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
+                      <div>
+                        <strong>{a.label}</strong><br/>
+                        <span style={{color:"#aaa",fontSize:11}}>{a.sub}</span>
+                      </div>
+                      {a.historique?.length > 0 && (
+                        <button onClick={()=>setExpandedHisto(prev=>{const n=new Set(prev);n.has(a.id)?n.delete(a.id):n.add(a.id);return n;})}
+                          style={{background:"none",border:"0.5px solid #c0c8e0",borderRadius:4,cursor:"pointer",
+                            padding:"1px 5px",fontSize:10,color:"#7090CC",whiteSpace:"nowrap",flexShrink:0,marginTop:2}}>
+                          {expandedHisto.has(a.id)?"▲ Histo":"▼ Histo"} ({a.historique.length})
+                        </button>
+                      )}
+                    </div>
                   </TD>
                   {/* Clé */}
                   <TD style={{borderBottom:bbot}}>
@@ -874,6 +1002,40 @@ export default function App() {
                       {["B2","B3","B4","B5","B6"].map(b=><>{td(null,{borderLeft:"1px solid #ddd"})}{td(null,{background:"#fafaf8"})}</>)}
                       {/* Commentaire */}
                       <td style={{borderBottom:bsep,borderLeft:"1px solid #ddd"}}></td>
+                    </tr>
+                  );
+                }) : []),
+
+                // Lignes historique
+                ...(expandedHisto.has(a.id) && a.historique?.length > 0 ? a.historique.map((h, hi) => {
+                  const isLastH = hi === a.historique.length - 1;
+                  const bsepH = isLast && !expanded.has(a.id) && isLastH ? "none" : "0.5px solid #eee";
+                  const nbCols = 16; // B2→B6 = 10 + commentaire + 5 autres
+                  return (
+                    <tr key={`histo-${a.id}-${h.annee}`} style={{background:"#f0f0f8"}}>
+                      <td style={{padding:"5px 6px",borderBottom:bsepH}}></td>
+                      <td style={{padding:"5px 10px",borderBottom:bsepH,fontSize:11,color:"#666"}}>
+                        <span style={{color:"#aaa",marginRight:4}}>📅</span>
+                        <strong style={{color:"#185FA5"}}>{h.annee}</strong>
+                        <span style={{color:"#aaa",fontSize:10,marginLeft:6}}>historique</span>
+                      </td>
+                      <td style={{padding:"5px 6px",borderBottom:bsepH}}></td>
+                      {/* Total validé historique */}
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,borderLeft:"1px solid #444",color:"#555",fontSize:11}}>{fmt(h.B1)}</td>
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,color:"#aaa",fontSize:11}}>—</td>
+                      {/* B1 validé */}
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,borderLeft:"1px solid #ddd",color:"#555",fontSize:11}}>{fmt(h.B1)}</td>
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,color:"#aaa",fontSize:11}}>—</td>
+                      {/* E et F historiques */}
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,borderLeft:"1px solid #b0d8b8",background:"#F0F7F2",color:"#185FA5",fontSize:11}}>{fmt(h.os_total)}</td>
+                      <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,background:"#F0F7F2",fontSize:11}}>{fmt(h.facture)}</td>
+                      {/* FAR, NE, NF vides */}
+                      <td style={{padding:"5px 10px",borderBottom:bsepH,background:"#fdf5ee",borderLeft:"1px solid #d8b898"}}></td>
+                      <td style={{padding:"5px 10px",borderBottom:bsepH,background:"#fdf5ee"}}></td>
+                      <td style={{padding:"5px 10px",borderBottom:bsepH,background:"#fdf5ee"}}></td>
+                      {/* B2→B6 vides */}
+                      {[0,1,2,3,4].map(i=><><td key={`h${i}a`} style={{borderBottom:bsepH,borderLeft:"1px solid #ddd"}}></td><td key={`h${i}b`} style={{borderBottom:bsepH}}></td></>)}
+                      <td style={{borderBottom:bsepH,borderLeft:"1px solid #ddd"}}></td>
                     </tr>
                   );
                 }) : [])
