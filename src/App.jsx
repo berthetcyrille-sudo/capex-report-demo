@@ -544,15 +544,14 @@ export default function App() {
                 const handleReset = () => {
                   const targetCol = `B${i+2}rev`;
                   const targetYr  = AN(i);
+                  const initKey   = `B${i+2}`;
                   setConfirmModal({
                     msg:`Remettre le budget révisé ${targetYr} au niveau du budget validé pour toutes les lignes ?`,
                     onConfirm:()=>{
                       setOverrides(prev=>{
-                        const next = {};
-                        Object.keys(prev).forEach(id => {
-                          const entry = {...prev[id]};
-                          delete entry[targetCol];
-                          if (Object.keys(entry).length > 0) next[id] = entry;
+                        const next = {...prev};
+                        CAPEX_DATA.forEach(a=>{
+                          next[a.id] = {...(next[a.id]||{}), [targetCol]: a[initKey]};
                         });
                         return next;
                       });
