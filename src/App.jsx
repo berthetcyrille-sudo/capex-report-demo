@@ -383,14 +383,15 @@ const thG = { // style groupe entête
 };
 
 // ─── App ─────────────────────────────────────────────────────────────────────
-function ArbitrageModal({ lignes, AN, fmt, onIgnore, onApply }) {
+function ArbitrageModal({ lignes, AN, fmt, onIgnore, onClose, onApply }) {
   const [checked, setChecked] = useState(new Set(lignes.map(l=>l.id+l.annee)));
   const toggle = (key) => setChecked(prev=>{const n=new Set(prev);n.has(key)?n.delete(key):n.add(key);return n;});
   const byYear = {};
   lignes.forEach(l=>{if(!byYear[l.annee])byYear[l.annee]=[];byYear[l.annee].push(l);});
   return (
     <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.4)"}}>
-      <div style={{background:"#fff",borderRadius:12,padding:"28px 32px",maxWidth:560,width:"90vw",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
+      <div style={{background:"#fff",borderRadius:12,padding:"28px 32px",maxWidth:560,width:"90vw",boxShadow:"0 8px 32px rgba(0,0,0,0.2)",position:"relative"}}>
+        <button onClick={onClose} style={{position:"absolute",top:12,right:14,background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#aaa",lineHeight:1}}>✕</button>
         <div style={{fontSize:20,marginBottom:6}}>⚠️ Budgets non arbitrés</div>
         <div style={{fontSize:13,color:"#555",marginBottom:16,lineHeight:1.6}}>
           Les opérations suivantes ont un budget validé pour des années futures mais aucune décision de report ou de révision n'a été prise.<br/>
@@ -665,6 +666,7 @@ export default function App() {
         lignes={arbitrageModal.lignes}
         AN={AN}
         fmt={fmt}
+        onClose={()=>setArbitrageModal(null)}
         onIgnore={()=>{setArbitrageModal(null);setReviseValide(true);toast(`Révisé ${AN(0)} validé et figé.`,"success");}}
         onApply={(lignes)=>{
           setOverrides(prev=>{
