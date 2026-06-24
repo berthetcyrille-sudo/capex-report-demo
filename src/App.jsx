@@ -625,7 +625,9 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                   <span>Reports possibles sur {AN(0)}</span>
                   <button
-                    onClick={()=>setConfirmModal({
+                    onClick={()=>{
+                      if(reviseValide){ toast("Le révisé est validé — actions de report bloquées.","warning"); return; }
+                      setConfirmModal({
                       msg:`Appliquer sur toutes les lignes le report du Budget non facturé (B1 − Facturé) sur ${AN(1)} ? Cette action écrasera les reports existants.`,
                       onConfirm:()=>{
                         setReports(prev=>{
@@ -648,9 +650,12 @@ export default function App() {
                           return next;
                         });
                       }
-                    })}
-                    style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"1px solid #c08050",
-                      background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                    });}}                    style={{fontSize:10,padding:"2px 8px",borderRadius:6,
+                      border: reviseValide?"1px solid #ccc":"1px solid #c08050",
+                      background: reviseValide?"#f5f5f5":"#fff3e8",
+                      color: reviseValide?"#ccc":"#8a4020",
+                      cursor: reviseValide?"default":"pointer",fontWeight:600,whiteSpace:"nowrap",
+                      opacity: reviseValide?0.5:1}}>
                     ⚡ Tout reporter B1−F
                   </button>
                 </div>
@@ -659,6 +664,7 @@ export default function App() {
                 const col = `B${i+1}rev`;
                 const yr = AN(i);
                 const handleReset = () => {
+                  if(reviseValide){ toast("Le révisé est validé — actions bloquées.","warning"); return; }
                   const targetYr = AN(i);
                   const bKey = `B${i+1}`;
                   const bRevKey = `B${i+1}rev`;
@@ -682,8 +688,12 @@ export default function App() {
                     <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                       <span>Budget</span>
                       <button onClick={handleReset}
-                        style={{fontSize:9,padding:"1px 6px",borderRadius:5,border:"1px solid #aabbd0",
-                          background:"#f0f5ff",color:"#2a5a8a",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                        style={{fontSize:9,padding:"1px 6px",borderRadius:5,
+                          border: reviseValide?"1px solid #ccc":"1px solid #aabbd0",
+                          background: reviseValide?"#f5f5f5":"#f0f5ff",
+                          color: reviseValide?"#ccc":"#2a5a8a",
+                          cursor: reviseValide?"default":"pointer",
+                          fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}>
                         ↺ Validé
                       </button>
                     </div>
