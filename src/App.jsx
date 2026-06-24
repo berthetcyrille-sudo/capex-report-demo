@@ -685,9 +685,18 @@ export default function App() {
                               onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                               style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                           : isActive
-                            ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                            ? <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
+                                onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
+                                onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
                                 <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
-                                {detail()}
+                                {detail() && <>
+                                  <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
+                                  <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
+                                    width:220,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
+                                    fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
+                                    {detail()}
+                                  </div>
+                                </>}
                               </div>
                             : <span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span>}
                       </td>
@@ -737,10 +746,18 @@ export default function App() {
                                 onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                                 style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                             : dispVal!==null
-                              ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:1}}>
+                              ? <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
+                                  onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
+                                  onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
                                   <span style={{color:"#b05000",fontWeight:600}}>{fmt(dispVal)}</span>
-                                  {!hasOvr && col==="B2rev" && totalRep>0 &&
-                                    <span style={{fontSize:10,color:"#7090CC"}}>{fmt(a[init])} +{fmt(totalRep)}</span>}
+                                  {!hasOvr && col==="B2rev" && totalRep>0 && <>
+                                    <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
+                                    <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
+                                      width:200,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
+                                      fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
+                                      Budget validé {fmt(a[init])} + report {fmt(totalRep)}
+                                    </div>
+                                  </>}
                                   {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
                                 </div>
                               : <span style={{color:"#ccc",fontSize:11}}>= {a[init]>0?fmt(a[init]):"—"}</span>}
