@@ -1005,6 +1005,7 @@ export default function App() {
               const isLineValidated = validatedLines.has(a.id);
               const isBlocked = reviseValide || isLineValidated;
               const isLast   = ai===simData.length-1;
+              const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
               const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
               const rtColors = {far:"#27500A|#EAF3DE",ne:"#854F0B|#FAEEDA",nf:"#5C3D00|#FEF0D0",manu:"#0C447C|#E6F1FB",conserve:"#0C447C|#E6F1FB",full:"#3a0a6e|#ede0ff"};
