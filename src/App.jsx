@@ -520,9 +520,35 @@ export default function App() {
                   </button>
                 </div>
               </th>
-              {[1,2,3,4,5].map(i => (
-                <th key={i} colSpan={2} style={{ ...thG, color:"#555", background:"#e8eff8", borderLeft:"1px solid #d0d8e8", fontSize:11 }}>Budget</th>
-              ))}
+              {[1,2,3,4,5].map(i => {
+                const col = `B${i+1}rev`;
+                return (
+                  <th key={i} colSpan={2} style={{ ...thG, color:"#555", background:"#e8eff8", borderLeft:"1px solid #d0d8e8", fontSize:11 }}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                      <span>Budget</span>
+                      <button
+                        onClick={()=>setConfirmModal({
+                          msg:`Remettre le budget révisé ${AN(i)} au niveau du budget validé pour toutes les lignes ?`,
+                          onConfirm:()=>setOverrides(prev=>{
+                            const next={...prev};
+                            CAPEX_DATA.forEach(a=>{
+                              if(next[a.id]?.[col]!==undefined){
+                                const {[col]:_,...rest}=next[a.id];
+                                if(Object.keys(rest).length) next[a.id]=rest;
+                                else delete next[a.id];
+                              }
+                            });
+                            return next;
+                          })
+                        })}
+                        style={{fontSize:9,padding:"1px 6px",borderRadius:5,border:"1px solid #aabbd0",
+                          background:"#f0f5ff",color:"#2a5a8a",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                        ↺ Validé
+                      </button>
+                    </div>
+                  </th>
+                );
+              })}
               <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"1px solid #e0e0e0" }}></th>
             </tr>
             {/* Ligne 3 : colonnes */}
