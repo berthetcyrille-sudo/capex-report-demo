@@ -418,18 +418,36 @@ export default function App() {
   });
 
   const anneeRef = new Date(dateSimu).getFullYear() || 2026;
-  const AN = (n) => anneeRef + n; // {msg, onConfirm}
+  const AN = (n) => anneeRef + n;
+
+  // Coefficient d'avancement dans l'année (0 = 1er jan, 1 = 31 déc)
+  const simDate   = new Date(dateSimu);
+  const simMois   = simDate.getMonth(); // 0-11
+  const simJour   = simDate.getDate();
+  const avancement = Math.min(1, Math.max(0, (simMois * 30 + simJour) / 365));
+
+  // Données simulées : E et F évoluent avec l'avancement si on est dans l'année courante
+  const simData = capexData.map(a => ({
+    ...a,
+    os_total: Math.round(a.os_total * (avancement < 0.05 ? 0.05 : avancement) / 1) ,
+    facture:  Math.round(a.facture  * (avancement < 0.05 ? 0.05 : avancement) / 1),
+    os: a.os.map(o => ({
+      ...o,
+      montant: Math.round(o.montant * (avancement < 0.05 ? 0.05 : avancement)),
+      facture: Math.round(o.facture  * (avancement < 0.05 ? 0.05 : avancement)),
+    }))
+  }));
 
   const toast = (msg,type) => { setToastMsg({msg,type}); setTimeout(()=>setToastMsg(null),4000); };
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
 
   // Totaux
   const totBudget  = capexData.reduce((s,a)=>s+a.budget,0);
-  const totOS      = capexData.reduce((s,a)=>s+a.os_total,0);
-  const totFac     = capexData.reduce((s,a)=>s+a.facture,0);
-  const totFAR     = capexData.reduce((s,a)=>s+calcTfar(a),0);
-  const totNE      = capexData.reduce((s,a)=>s+calcNE(a),0);
-  const totNF      = capexData.reduce((s,a)=>s+calcNF(a),0);
+  const totOS      = simData.reduce((s,a)=>s+a.os_total,0);
+  const totFac     = simData.reduce((s,a)=>s+a.facture,0);
+  const totFAR     = simData.reduce((s,a)=>s+calcTfar(a),0);
+  const totNE      = simData.reduce((s,a)=>s+calcNE(a),0);
+  const totNF      = simData.reduce((s,a)=>s+calcNF(a),0);
   const totReport  = capexData.reduce((s,a)=>s+calcTotalReport(a,reports),0);
   const totB1init  = capexData.reduce((s,a)=>s+a.B1,0);
   const totB1rev   = capexData.reduce((s,a)=>{
@@ -795,7 +813,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {capexData.map((a, ai) => {
+            {simData.map((a, ai) => {
               const totalRep = calcTotalReport(a, reports);
               const rep      = reports[a.id];
               const ne       = calcNE(a);
@@ -810,7 +828,7 @@ export default function App() {
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
               const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
               const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
-              const isLast   = ai===capexData.length-1;
+              const isLast   = ai===simData.length-1;
               const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
               const rt = rep?.rt;
               const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
@@ -832,7 +850,8 @@ export default function App() {
                     <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
                       <div>
                         <strong>{a.label}</strong><br/>
-                        <span style={{color:"#aaa",fontSize:11}}>{a.sub}</span>
+                        <span style={{color:"#aaa",fontSize:11}}>{a.sub}</span><br/>
+                        <span style={{color:"#bbb",fontSize:10}}>depuis {a.dateOuverture}</span>
                       </div>
                       {a.historique?.length > 0 && (
                         <button onClick={()=>setExpandedHisto(prev=>{const n=new Set(prev);n.has(a.id)?n.delete(a.id):n.add(a.id);return n;})}
