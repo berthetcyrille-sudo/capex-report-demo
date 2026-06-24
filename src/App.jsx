@@ -231,7 +231,7 @@ function InputRowConserve({ facture, budget, onApply, AN }) {
 }
 
 // ─── Menu contextuel actif ───────────────────────────────────────────────────
-function CtxMenu({ a, reports, setReports, setOverrides, toast, AN }) {
+function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) {
   const [open, setOpen]               = useState(false);
   const [showManu, setShowManu]       = useState(false);
   const [showConserve, setShowConserve] = useState(false);
@@ -286,9 +286,9 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN }) {
 
   return (
     <div style={{ position:"relative", display:"inline-block" }}>
-      <button onClick={e=>{e.stopPropagation();setOpen(o=>!o);}}
-        style={{ background:"none", border:"0.5px solid #ddd", borderRadius:6, cursor:"pointer",
-          padding:"3px 7px", fontSize:12, color:"#888" }}>⋮</button>
+      <button onClick={e=>{e.stopPropagation();if(!disabled)setOpen(o=>!o);}}
+        style={{ background:"none", border:"0.5px solid #ddd", borderRadius:6, cursor:disabled?"default":"pointer",
+          padding:"3px 7px", fontSize:12, color: disabled?"#ccc":"#888", opacity: disabled?0.4:1 }}>⋮</button>
       {open && (
         <>
           <div onClick={()=>{setOpen(false);setShowManu(false);setShowConserve(false);}}
@@ -352,15 +352,16 @@ const TD = ({children, right, style={}}) => (
     textAlign:right?"right":"left", fontSize:13, ...style }}>{children}</td>
 );
 
-function EditCell({id, col, initVal, bbot, editing, overrides, setEditing, setOverrides}) {
+function EditCell({id, col, initVal, bbot, editing, overrides, setEditing, setOverrides, reviseValide}) {
   const isEdit      = editing?.id===id && editing?.col===col;
   const hasOverride = overrides[id]?.[col] !== undefined;
   const val         = hasOverride ? overrides[id][col] : null;
   return (
     <td style={{ padding:"4px 8px", borderBottom:bbot, textAlign:"right", verticalAlign:"middle",
-      background: hasOverride ? "#fffbe0" : "#fafaf8", cursor:"pointer", fontSize:13 }}
-      title="Double-cliquez pour modifier"
-      onDoubleClick={()=>setEditing({id,col})}>
+      background: hasOverride ? "#fffbe0" : "#fafaf8",
+      cursor: reviseValide ? "default" : "pointer", fontSize:13 }}
+      title={reviseValide ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier"}
+      onDoubleClick={()=>{ if(!reviseValide) setEditing({id,col}); }}>
       {isEdit
         ? <input autoFocus type="number" defaultValue={hasOverride ? val : initVal}
             onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v))setOverrides(p=>({...p,[id]:{...p[id],[col]:v}}));setEditing(null);}}
@@ -839,9 +840,9 @@ export default function App() {
                     return (
                       <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,
                         background: isActive ? "#fffbe0" : "#fffef5",
-                        cursor:"text", fontWeight: isActive ? 600 : 400 }}
-                        title="Double-cliquez pour modifier — valeur de départ = Budget validé"
-                        onDoubleClick={()=>setEditing({id:a.id,col:"B1rev"})}>
+                        cursor: reviseValide ? "default" : "pointer", fontWeight: isActive ? 600 : 400 }}
+                        title={reviseValide ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
+                        onDoubleClick={()=>{ if(!reviseValide) setEditing({id:a.id,col:"B1rev"}); }}>
                         {isB1RevEdit
                           ? <input autoFocus type="number" defaultValue={displayVal ?? a.B1}
                               onBlur={e=>{
@@ -901,7 +902,7 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} />
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide} />
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
@@ -916,9 +917,10 @@ export default function App() {
                           {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}
                         </td>
                         <td key={col} style={{padding:"4px 8px",borderBottom:bbot,textAlign:"right",verticalAlign:"middle",
-                          background:dispVal!==null?"#fffbe0":"#fffef5",cursor:"text",fontSize:13}}
-                          title="Double-cliquez pour modifier — valeur de départ = Budget validé"
-                          onDoubleClick={()=>setEditing({id:a.id,col})}>
+                          background:dispVal!==null?"#fffbe0":"#fffef5",
+                          cursor: reviseValide ? "default" : "text", fontSize:13}}
+                          title={reviseValide ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
+                          onDoubleClick={()=>{ if(!reviseValide) setEditing({id:a.id,col}); }}>
                           {isEdit
                             ? <input autoFocus type="number" defaultValue={dispVal??a[init]}
                                 onBlur={e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){const tot0=a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;const cur=overrides[a.id]||{};const nr=(cur.B1rev??a.B1)+(col==="B2rev"?v:(cur.B2rev??a.B2))+(col==="B3rev"?v:(cur.B3rev??a.B3))+(col==="B4rev"?v:(cur.B4rev??a.B4))+(col==="B5rev"?v:(cur.B5rev??a.B5))+(col==="B6rev"?v:(cur.B6rev??a.B6));if(nr>tot0){setEditing(null);setConfirmModal({msg:`Le total du budget révisé (${fmt(nr)}) est supérieur au budget initial (${fmt(tot0)}) ; confirmez-vous la saisie ?`,onConfirm:()=>setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}))});}else{setOverrides(p=>({...p,[a.id]:{...p[a.id],[col]:v}}));setEditing(null);}}else setEditing(null);}}
