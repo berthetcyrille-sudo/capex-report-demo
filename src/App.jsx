@@ -474,22 +474,39 @@ export default function App() {
   const AN = (n) => anneeRef + n;
 
   // Coefficient d'avancement dans l'année (0 = 1er jan, 1 = 31 déc)
-  const simDate   = new Date(dateSimu);
-  const simMois   = simDate.getMonth(); // 0-11
-  const simJour   = simDate.getDate();
-  const avancement = Math.min(1, Math.max(0, (simMois * 30 + simJour) / 365));
+  const simDate  = new Date(dateSimu);
+  const simMois  = simDate.getMonth(); // 0-11
+  const simJour  = simDate.getDate();
+  const t = Math.min(0.999, Math.max(0.01, (simMois * 30 + simJour) / 365));
+  // Courbe logarithmique : progression rapide en début, ralentit vers la fin
+  // coeff entre 0.05 (jan) et ~0.85 (déc) — jamais 1 pour ne pas atteindre le budgété
+  const coeff = (e, f) => {
+    // E progresse plus vite que F (engagement avant facturation)
+    const eCoeff = Math.min(0.92, 0.05 + 0.87 * Math.log(1 + t * 9) / Math.log(10));
+    const fCoeff = Math.min(0.82, 0.03 + 0.79 * Math.log(1 + t * 7) / Math.log(10));
+    return { e: eCoeff, f: fCoeff };
+  };
 
-  // Données simulées : E et F évoluent avec l'avancement si on est dans l'année courante
-  const simData = capexData.map(a => ({
-    ...a,
-    os_total: Math.round(a.os_total * (avancement < 0.05 ? 0.05 : avancement) / 1) ,
-    facture:  Math.round(a.facture  * (avancement < 0.05 ? 0.05 : avancement) / 1),
-    os: a.os.map(o => ({
-      ...o,
-      montant: Math.round(o.montant * (avancement < 0.05 ? 0.05 : avancement)),
-      facture: Math.round(o.facture  * (avancement < 0.05 ? 0.05 : avancement)),
-    }))
-  }));
+  // Données simulées : E et F évoluent avec la courbe logarithmique
+  const simData = capexData.map(a => {
+    const {e: ec, f: fc} = coeff(a.os_total, a.facture);
+    // Valeurs max = B1 (budget de l'année), plancher = valeurs initiales au 1er jan
+    const eMax = a.B1;
+    const fMax = Math.round(a.B1 * 0.75); // F plafonne à 75% du budget (toujours du FAR)
+    return {
+      ...a,
+      os_total: Math.round(Math.max(a.os_total * 0.05, Math.min(eMax * ec, eMax * 0.92))),
+      facture:  Math.round(Math.max(a.facture  * 0.03, Math.min(fMax * fc, fMax * 0.82))),
+      os: a.os.map(o => {
+        const {e: oec, f: ofc} = coeff(o.montant, o.facture);
+        return {
+          ...o,
+          montant: Math.round(Math.max(o.montant * 0.05, Math.min(o.montant * oec / 0.5 * ec, o.montant * 0.95))),
+          facture: Math.round(Math.max(o.facture  * 0.03, Math.min(o.facture  * ofc / 0.5 * fc, o.facture  * 0.88))),
+        };
+      })
+    };
+  });
 
   const toast = (msg,type) => { setToastMsg({msg,type}); setTimeout(()=>setToastMsg(null),4000); };
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
