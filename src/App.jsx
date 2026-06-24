@@ -571,9 +571,10 @@ export default function App() {
                   const bRevKey = `B${i+1}rev`;
                   capexData.forEach(a=>{
                     if(a[bKey]>0){
-                      const ovr=overrides[a.id]?.[bRevKey];
-                      const rep=calcTotalReport(a,reports);
-                      const hasRev = (ovr!==undefined&&ovr!==a[bKey]) || (i===1&&rep>0);
+                      const ovr = overrides[a.id]?.[bRevKey];
+                      const rep = i===1 ? calcTotalReport(a,reports) : 0;
+                      // Considéré arbitré si : override présent (quelle que soit la valeur) OU report actif sur N+1
+                      const hasRev = ovr !== undefined || rep > 0;
                       if(!hasRev) nonArbitrees.push({id:a.id, label:a.label, annee:AN(i), bKey, bRevKey, montant:a[bKey]});
                     }
                   });
