@@ -391,7 +391,7 @@ export default function App() {
     const rep=calcTotalReport(a,reports);
     const ovr=overrides[a.id]||{};
     const hasRev=rep>0||Object.keys(ovr).some(k=>k.endsWith("rev"));
-    if(!hasRev) return s+(a.B1+a.B2+a.B3+a.B4+a.B5+a.B6);
+    if(!hasRev) return s; // ligne non révisée → ne contribue pas
     const b1=ovr.B1rev!==undefined?ovr.B1rev:(rep>0?a.B1-rep:a.B1);
     const b2=ovr.B2rev!==undefined?ovr.B2rev:(rep>0?a.B2+rep:a.B2);
     const b3=ovr.B3rev!==undefined?ovr.B3rev:a.B3;
@@ -566,7 +566,7 @@ export default function App() {
               const ne       = calcNE(a);
               const far      = calcTfar(a);
               const nf       = calcNF(a);
-              const B1rev    = overrides[a.id]?.B1rev ?? (a.B1 - totalRep);
+              const B1rev    = overrides[a.id]?.B1rev ?? (totalRep > 0 ? a.B1 - totalRep : null);
               const B2rev    = overrides[a.id]?.B2rev ?? (totalRep > 0 ? a.B2 + totalRep : null);
               const B3rev    = overrides[a.id]?.B3rev ?? null;
               const B4rev    = overrides[a.id]?.B4rev ?? null;
