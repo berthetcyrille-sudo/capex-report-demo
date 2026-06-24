@@ -543,8 +543,8 @@ export default function App() {
                 const yr = AN(i);
                 const handleReset = () => {
                   const targetYr = AN(i);
-                  const bKey = `B${i+2}`;
-                  const bRevKey = `B${i+2}rev`;
+                  const bKey = `B${i+1}`;
+                  const bRevKey = `B${i+1}rev`;
                   setConfirmModal({
                     msg:`Remettre le budget révisé ${targetYr} au niveau du budget validé pour toutes les lignes ?`,
                     onConfirm:()=>{
