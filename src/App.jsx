@@ -548,18 +548,15 @@ export default function App() {
                     msg:`Remettre le budget révisé ${targetYr} au niveau du budget validé pour toutes les lignes ?`,
                     onConfirm:()=>{
                       setOverrides(prev=>{
-                        const next = {...prev};
-                        CAPEX_DATA.forEach(a=>{
-                          if(next[a.id]?.[targetCol] !== undefined){
-                            const updated = {...next[a.id]};
-                            delete updated[targetCol];
-                            if(Object.keys(updated).length) next[a.id] = updated;
-                            else delete next[a.id];
-                          }
+                        const next = {};
+                        Object.keys(prev).forEach(id => {
+                          const entry = {...prev[id]};
+                          delete entry[targetCol];
+                          if (Object.keys(entry).length > 0) next[id] = entry;
                         });
                         return next;
                       });
-                      toast(`Budget révisé ${targetYr} remis au niveau du validé.`, "info");
+                      toast(`Budget révisé ${targetYr} remis au niveau du validé.`, "success");
                     }
                   });
                 };
