@@ -325,7 +325,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
   );
 }
 
-const TD = ({children, right, style={}}) => (
+const Ghost = ({bg}) => <span style={{display:"block",fontSize:9,padding:"1px 6px",borderRadius:4,border:`0.5px solid ${bg}`,background:bg,color:bg,userSelect:"none",pointerEvents:"none",marginTop:3}}>·</span>;
   <td style={{ padding:"8px 10px", borderBottom:"0.5px solid #eee", verticalAlign:"middle",
     textAlign:right?"right":"left", fontSize:13, ...style }}>{children}</td>
 );
@@ -1158,23 +1158,33 @@ export default function App() {
                   })()}
                   {/* OS engagés */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #b0d8b8",background:"#F0F7F2",color:"#185FA5"}}>
-                    {fmt(a.os_total)}
+                    {fmt(a.os_total)}<Ghost bg="#F0F7F2" />
                   </td>
                   {/* Facturé */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",background:"#F0F7F2"}}>
-                    {fmt(a.facture)}
+                    {fmt(a.facture)}<Ghost bg="#F0F7F2" />
                   </td>
                   {/* FAR */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #d8b898",background:"#fdf5ee",verticalAlign:"middle"}}>
-                    {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
+                    {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}<Ghost bg="#fdf5ee" />
                   </td>
                   {/* Non engagé */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",background:"#fdf5ee",verticalAlign:"middle"}}>
-                    {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
+                    <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                      {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
+                      {!isBlocked && ne>0 && reports[a.id]?.rt==="ne" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
+                      {!isBlocked && ne>0 && reports[a.id]?.rt!=="ne" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
+                      {(isBlocked || !ne) && <Ghost bg="#fdf5ee" />}
+                    </div>
                   </td>
                   {/* Non facturé */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",verticalAlign:"middle"}}>
-                    {nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}
+                    <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                      {nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}
+                      {!isBlocked && nf>0 && reports[a.id]?.rt==="nf" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
+                      {!isBlocked && nf>0 && reports[a.id]?.rt!=="nf" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
+                      {(isBlocked || !nf) && <Ghost bg="#ffffff" />}
+                    </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
                   {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col],i)=>{
@@ -1245,7 +1255,7 @@ export default function App() {
                   </td>
                 </tr>,
 
-                /* Ligne d'actions — collée sous la ligne de données */
+                /* Ligne d'actions */
                 <tr key={a.id+"-actions"} style={{background:"inherit"}}>
                   <td style={{padding:0,borderBottom:bbot}}></td>
                   <td style={{padding:0,borderBottom:bbot}}></td>
@@ -1256,25 +1266,10 @@ export default function App() {
                   <td style={{padding:0,borderBottom:bbot}}></td>
                   <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2",borderLeft:"1px solid #b0d8b8"}}></td>
                   <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2"}}></td>
-                  <td style={{padding:"2px 8px 4px",borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee",textAlign:"right",verticalAlign:"top"}}></td>
-                  <td style={{padding:"2px 8px 4px",borderBottom:bbot,background:"#fdf5ee",textAlign:"right",verticalAlign:"top"}}>
-                    {!isBlocked && ne>0 && (reports[a.id]?.rt==="ne"
-                      ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
-                          onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
-                      : ne>0&&<button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
-                          style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
-                    )}
-                  </td>
+                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee"}}></td>
+                  <td style={{padding:0,borderBottom:bbot,background:"#fdf5ee"}}></td>
                   <td style={{padding:"2px 8px 4px",borderBottom:bbot,textAlign:"right",verticalAlign:"top"}}>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-                      {!isBlocked && nf>0 && (reports[a.id]?.rt==="nf"
-                        ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
-                            onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
-                        : nf>0&&<button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
-                            style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
-                      )}
-                      {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
-                    </div>
+                    {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
                   </td>
                   {[0,1,2,3,4].map(i=><React.Fragment key={i}><td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td><td style={{padding:0,borderBottom:bbot}}></td></React.Fragment>)}
                   <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td>
