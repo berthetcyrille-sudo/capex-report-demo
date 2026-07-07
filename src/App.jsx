@@ -1168,51 +1168,49 @@ export default function App() {
                     {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* Non engagé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"top"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle",position:"relative"}}>
                     <div>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</div>
                     {ne>0 && !isBlocked && (
-                      reports[a.id]?.rt==="ne"
-                        ? <div style={{marginTop:3}}>
-                            <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
-                              title="Annuler ce report"
-                              onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
-                              → {AN(1)} ✕
-                            </span>
-                          </div>
-                        : <div style={{marginTop:3}}>
-                            <button
-                              title={`Reporter le budget non engagé sur ${AN(1)} : ${fmt(ne)}`}
-                              onClick={()=>{
-                                setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));
-                                setOverrides(prev=>{
-                                  const next={...prev};
-                                  if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
-                                  return next;
-                                });
-                              }}
-                              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
-                                background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
-                              → {AN(1)}
-                            </button>
-                          </div>
+                      <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
+                      {reports[a.id]?.rt==="ne"
+                        ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                            title="Annuler ce report"
+                            onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
+                            → {AN(1)} ✕
+                          </span>
+                        : <button
+                            title={`Reporter le budget non engagé sur ${AN(1)} : ${fmt(ne)}`}
+                            onClick={()=>{
+                              setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));
+                              setOverrides(prev=>{
+                                const next={...prev};
+                                if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
+                                return next;
+                              });
+                            }}
+                            style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                              background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                            → {AN(1)}
+                          </button>}
+                      </div>
                     )}
                   </td>
                   {/* Non facturé + menu ⋮ */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"top"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",position:"relative"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
                       <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
                     </div>
                     {nf>0 && !isBlocked && (
                       reports[a.id]?.rt==="nf"
-                        ? <div style={{marginTop:3,textAlign:"right"}}>
+                        ? <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
                             <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
                               title="Annuler ce report"
                               onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
                               → {AN(1)} ✕
                             </span>
                           </div>
-                        : <div style={{marginTop:3,textAlign:"right"}}>
+                        : <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
                             <button
                               title={`Reporter le budget non facturé sur ${AN(1)} : ${fmt(nf)}`}
                               onClick={()=>{
@@ -1335,20 +1333,20 @@ export default function App() {
                       {/* F Facturé */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",fontSize:12}}>{fmt(o.facture)}</td>
                       {/* FAR */}
-                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12,verticalAlign:"top"}}>
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12,verticalAlign:"middle",position:"relative"}}>
                         {f>0
                           ? <>
                               <strong>{fmt(f)}</strong>
                               {!reviseValide && (
                                 reports[o.id]?.rt==="far"
-                                  ? <div style={{marginTop:3}}><span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                                  ? <div style={{position:"absolute",right:4,top:"calc(50% + 6px)"}}><span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
                                       title="Annuler ce report"
                                       onClick={()=>setReports(prev=>{
                                         const next={...prev};
                                         delete next[o.id];
                                         return next;
                                       })}>→ {AN(1)} ✕</span></div>
-                                  : <div style={{marginTop:3}}><button
+                                  : <div style={{position:"absolute",right:4,top:"calc(50% + 6px)"}}><button
                                       title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
                                       onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
                                       style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
