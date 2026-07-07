@@ -326,6 +326,8 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
 }
 
 const Ghost = ({bg}) => <span style={{display:"block",fontSize:9,padding:"1px 6px",borderRadius:4,border:`0.5px solid ${bg}`,background:bg,color:bg,userSelect:"none",pointerEvents:"none",marginTop:3}}>·</span>;
+
+const TD = ({children, right, style={}}) => (
   <td style={{ padding:"8px 10px", borderBottom:"0.5px solid #eee", verticalAlign:"middle",
     textAlign:right?"right":"left", fontSize:13, ...style }}>{children}</td>
 );
