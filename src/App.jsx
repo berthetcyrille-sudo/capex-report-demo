@@ -318,7 +318,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
               </>}
             </> : <>
               {/* OS ouverts — actions détaillées */}
-              {ne>0  && <CtxItem label={`Reporter le budget non engagé — NE = ${fmt(ne)}`}     tipKey="ne"  onClick={()=>apply("ne")} />}
+              {/* NE et NF déplacés sur les cellules directement */}
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
               <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
@@ -1182,8 +1182,32 @@ export default function App() {
                     {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* Non engagé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee"}}>
-                    {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                      <span>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</span>
+                      {ne>0 && !isBlocked && (
+                        reports[a.id]?.rt==="ne"
+                          ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                              title="Annuler ce report"
+                              onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
+                              → {AN(1)} ✕
+                            </span>
+                          : <button
+                              title={`Reporter le budget non engagé sur ${AN(1)} : ${fmt(ne)}`}
+                              onClick={()=>{
+                                setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));
+                                setOverrides(prev=>{
+                                  const next={...prev};
+                                  if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
+                                  return next;
+                                });
+                              }}
+                              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                                background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                              → {AN(1)}
+                            </button>
+                      )}
+                    </div>
                   </td>
                   {/* Non facturé + menu ⋮ */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
