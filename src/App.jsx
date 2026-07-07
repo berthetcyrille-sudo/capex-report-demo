@@ -109,6 +109,19 @@ const fmt = (n) => n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",max
 
 function calcTotalReport(a, reports) {
   const ar  = reports[a.id]?.report || 0;
+  // Exclure les reports FAR des OS du calcul de B1' (ils alimentent B2' sans réduire B1')
+  const osr = a.os.reduce((s,o) => {
+    const r = reports[o.id];
+    if(!r) return s;
+    if(r.rt==="far") return s; // FAR → va en B2' sans toucher B1'
+    return s + (r.report||0);
+  }, 0);
+  return ar + osr;
+}
+
+function calcTotalReportB2(a, reports) {
+  // Pour B2' : inclut les FAR des OS
+  const ar  = reports[a.id]?.report || 0;
   const osr = a.os.reduce((s,o) => s+(reports[o.id]?.report||0), 0);
   return ar + osr;
 }
@@ -258,7 +271,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
       const next = {...prev};
       if (type==="full")     { next[a.id]={report:a.B1, rt:"full"}; }
       if (type==="ne")      { next[a.id]={report:ne, rt:"ne"}; }
-      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0) next[o.id]={report:calcFar(o),rt:"far"};}); next[a.id]={...(next[a.id]||{}),report:calcTfar(a),rt:"far"}; }
+      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0) next[o.id]={report:calcFar(o),rt:"far"};}); if(next[a.id]?.rt==="far") delete next[a.id]; }
       if (type==="nf")      { next[a.id]={report:nf, rt:"nf"}; }
       if (type==="manu")    { next[a.id]={report:val,rt:"manu"}; }
       if (type==="conserve"){ const r=Math.max(0,a.budget-a.facture-val); next[a.id]={report:r,rt:"conserve"}; }
@@ -587,7 +600,7 @@ export default function App() {
   },0);
   const totB2init  = capexData.reduce((s,a)=>s+a.B2,0);
   const totB2rev   = capexData.reduce((s,a)=>{
-    const rep=calcTotalReport(a,reports); const ovr=overrides[a.id]?.B2rev;
+    const rep=calcTotalReportB2(a,reports); const ovr=overrides[a.id]?.B2rev;
     if(ovr!==undefined) return s+ovr;
     if(rep>0) return s+(a.B2+rep);
     return s;
@@ -603,7 +616,7 @@ export default function App() {
   const totInitial = totB1init+totB2init+totB3init+totB4init+totB5init+totB6init;
   // Total révisé = initial des lignes non révisées + révisé des lignes révisées
   const totRevise  = totB1rev+totB2rev+totB3rev+totB4rev+totB5rev+totB6rev;
-  const hasAnyRev  = totReport>0 || capexData.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
+  const hasAnyRev  = totReport>0 || capexData.some(a=>a.os.some(o=>reports[o.id]?.rt==="far")) || capexData.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
   const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"3px 8px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap", lineHeight:"1.2" };
@@ -995,15 +1008,17 @@ export default function App() {
           </thead>
           <tbody>
             {simData.map((a, ai) => {
-              const totalRep = calcTotalReport(a, reports);
+              const totalRep  = calcTotalReport(a, reports);   // pour B1' (hors FAR OS)
+              const totalRepB2 = calcTotalReportB2(a, reports); // pour B2' (avec FAR OS)
               const rep      = reports[a.id];
               // Si pas de report sur a.id mais des reports sur les OS → FAR
               const rt = rep?.rt ?? (a.os.some(o=>reports[o.id]?.rt==="far") ? "far" : null);
+              const hasFarOS = a.os.some(o=>reports[o.id]?.rt==="far");
               const ne       = calcNE(a);
               const far      = calcTfar(a);
               const nf       = calcNF(a);
               const B1rev    = overrides[a.id]?.B1rev ?? (totalRep > 0 ? a.B1 - totalRep : null);
-              const B2rev    = overrides[a.id]?.B2rev ?? (totalRep > 0 ? a.B2 + totalRep : null);
+              const B2rev    = overrides[a.id]?.B2rev ?? (totalRepB2 > 0 ? a.B2 + totalRepB2 : null);
               const B3rev    = overrides[a.id]?.B3rev ?? null;
               const B4rev    = overrides[a.id]?.B4rev ?? null;
               const B5rev    = overrides[a.id]?.B5rev ?? null;
@@ -1298,21 +1313,11 @@ export default function App() {
                                       onClick={()=>setReports(prev=>{
                                         const next={...prev};
                                         delete next[o.id];
-                                        // recalculer le total FAR sur a.id
-                                        const remaining = a.os.filter(x=>x.id!==o.id&&next[x.id]?.rt==="far").reduce((s,x)=>s+(next[x.id]?.report||0),0);
-                                        if(remaining>0) next[a.id]={report:remaining,rt:"far"};
-                                        else delete next[a.id];
                                         return next;
                                       })}>→ {AN(1)} ✕</span>
                                   : <button
                                       title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
-                                      onClick={()=>setReports(prev=>{
-                                        const next={...prev,[o.id]:{report:f,rt:"far"}};
-                                        // mettre à jour le total sur a.id
-                                        const total = a.os.reduce((s,x)=>s+(next[x.id]?.rt==="far"?next[x.id].report:0),0);
-                                        next[a.id]={report:total,rt:"far"};
-                                        return next;
-                                      })}
+                                      onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
                                       style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
                                         background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
                                       → {AN(1)}
