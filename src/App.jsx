@@ -1183,7 +1183,7 @@ export default function App() {
                   </td>
                   {/* Non engagé */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle"}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       <span>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</span>
                       {ne>0 && !isBlocked && (
                         reports[a.id]?.rt==="ne"
@@ -1211,7 +1211,7 @@ export default function App() {
                   </td>
                   {/* Non facturé + menu ⋮ */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
                       {nf>0 && !isBlocked && (
                         reports[a.id]?.rt==="nf"
@@ -1345,7 +1345,7 @@ export default function App() {
                       {/* FAR */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12}}>
                         {f>0
-                          ? <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                          ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                               <strong>{fmt(f)}</strong>
                               {!reviseValide && (
                                 reports[o.id]?.rt==="far"
