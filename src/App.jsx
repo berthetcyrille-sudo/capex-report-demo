@@ -283,30 +283,29 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
   return (
     <div style={{ position:"relative", display:"inline-block" }}>
       <button onClick={e=>{e.stopPropagation();if(!disabled)setOpen(o=>!o);}}
-        style={{ background:"none", border:"0.5px solid #ddd", borderRadius:6, cursor:disabled?"default":"pointer",
-          padding:"3px 7px", fontSize:12, color: disabled?"#ccc":"#888", opacity: disabled?0.4:1 }}>⋮</button>
+        style={{ fontSize:9, padding:"1px 5px", borderRadius:4,
+          border: disabled?"0.5px solid #ddd":"0.5px solid #d8b898",
+          background: disabled?"#f5f5f5":"#fff3e8",
+          color: disabled?"#ccc":"#8a4020",
+          cursor:disabled?"default":"pointer", fontWeight:600,
+          opacity: disabled?0.5:1, whiteSpace:"nowrap" }}>✎ Saisie manuelle</button>
       {open && (
         <>
           <div onClick={()=>{setOpen(false);setShowManu(false);setShowConserve(false);}}
             style={{ position:"fixed", inset:0, zIndex:9998 }} />
           <div style={{ position:"absolute", right:0, top:"calc(100% + 4px)", width:300, background:"#fff",
             border:"0.5px solid #ccc", borderRadius:10, zIndex:9999, boxShadow:"0 4px 20px rgba(0,0,0,.12)" }}>
-            <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", letterSpacing:".07em",
-              color:"#999", padding:"8px 12px 4px" }}>{a.label.slice(0,30)}</div>
-            <div style={{ fontSize:11, fontWeight:600, color:"#555", padding:"6px 12px 4px", borderTop:"0.5px solid #eee" }}>
-              Reporter sur {AN(1)} :
+            <div style={{ fontSize:11, fontWeight:600, color:"#555", padding:"8px 12px 4px", borderTop:"0.5px solid #eee" }}>
+              Report partiel sur {AN(1)} :
             </div>
             {a.os_total === 0 ? <>
-              <div style={{fontSize:11,color:"#aaa",padding:"4px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
-                <CtxItem label={`Je saisis le montant à reporter sur ${AN(1)}`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                <CtxItem label={`Je saisis le montant à reporter`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
                 {showManu && <InputRow label={`Montant à reporter sur ${AN(1)} (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
               </>}
             </> : <>
-              {/* NE et NF déplacés sur les cellules directement */}
-              <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
-                <CtxItem label={`Je saisis le montant à reporter sur ${AN(1)}`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                <CtxItem label={`Je saisis le montant à reporter`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
                 {showManu && <InputRow label={`Montant à reporter sur ${AN(1)} (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
               </>}
               {bmf>0 && <>
@@ -1199,33 +1198,36 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",position:"relative"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
                     </div>
                     {nf>0 && !isBlocked && (
-                      reports[a.id]?.rt==="nf"
-                        ? <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
-                            <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
-                              title="Annuler ce report"
-                              onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
-                              → {AN(1)} ✕
-                            </span>
-                          </div>
-                        : <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
-                            <button
-                              title={`Reporter le budget non facturé sur ${AN(1)} : ${fmt(nf)}`}
-                              onClick={()=>{
-                                setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));
-                                setOverrides(prev=>{
-                                  const next={...prev};
-                                  if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
-                                  return next;
-                                });
-                              }}
-                              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
-                                background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
-                              → {AN(1)}
-                            </button>
-                          </div>
+                      <div style={{position:"absolute",right:8,top:"calc(50% + 8px)",display:"flex",flexDirection:"column",gap:3,alignItems:"flex-end"}}>
+                      {reports[a.id]?.rt==="nf"
+                        ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                            title="Annuler ce report"
+                            onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
+                            → {AN(1)} ✕
+                          </span>
+                        : <button
+                            title={`Reporter le budget non facturé sur ${AN(1)} : ${fmt(nf)}`}
+                            onClick={()=>{
+                              setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));
+                              setOverrides(prev=>{
+                                const next={...prev};
+                                if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
+                                return next;
+                              });
+                            }}
+                            style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                              background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                            → {AN(1)}
+                          </button>}
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
+                      </div>
+                    )}
+                    {!nf && !isBlocked && (
+                      <div style={{position:"absolute",right:8,top:"calc(50% + 8px)"}}>
+                        <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
+                      </div>
                     )}
                   </td>
                   {/* B2 à B5 initial + révisé */}
