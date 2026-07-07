@@ -1289,7 +1289,22 @@ export default function App() {
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",fontSize:12}}>{fmt(o.facture)}</td>
                       {/* FAR */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12}}>
-                        {f>0?<strong style={{color:"inherit"}}>{fmt(f)}</strong>:<span style={{color:"#ccc"}}>—</span>}
+                        {f>0
+                          ? <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                              <strong style={{color:"inherit"}}>{fmt(f)}</strong>
+                              {!reviseValide && (
+                                reports[o.id]?.rt==="far"
+                                  ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>✓</span>
+                                  : <button
+                                      onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
+                                      title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
+                                      style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                                        background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                                      → {AN(1)}
+                                    </button>
+                              )}
+                            </div>
+                          : <span style={{color:"#ccc"}}>—</span>}
                       </td>
                       {/* NE */}
                       {td(null,{background:"#fdf5ee"})}
