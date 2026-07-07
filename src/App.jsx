@@ -1168,17 +1168,19 @@ export default function App() {
                     {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* Non engagé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle"}}>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
-                      <span>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</span>
-                      {ne>0 && !isBlocked && (
-                        reports[a.id]?.rt==="ne"
-                          ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"top"}}>
+                    <div>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</div>
+                    {ne>0 && !isBlocked && (
+                      reports[a.id]?.rt==="ne"
+                        ? <div style={{marginTop:3}}>
+                            <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
                               title="Annuler ce report"
                               onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
                               → {AN(1)} ✕
                             </span>
-                          : <button
+                          </div>
+                        : <div style={{marginTop:3}}>
+                            <button
                               title={`Reporter le budget non engagé sur ${AN(1)} : ${fmt(ne)}`}
                               onClick={()=>{
                                 setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));
@@ -1192,21 +1194,26 @@ export default function App() {
                                 background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
                               → {AN(1)}
                             </button>
-                      )}
-                    </div>
+                          </div>
+                    )}
                   </td>
                   {/* Non facturé + menu ⋮ */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"top"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      {nf>0 && !isBlocked && (
-                        reports[a.id]?.rt==="nf"
-                          ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
+                    </div>
+                    {nf>0 && !isBlocked && (
+                      reports[a.id]?.rt==="nf"
+                        ? <div style={{marginTop:3,textAlign:"right"}}>
+                            <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
                               title="Annuler ce report"
                               onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
                               → {AN(1)} ✕
                             </span>
-                          : <button
+                          </div>
+                        : <div style={{marginTop:3,textAlign:"right"}}>
+                            <button
                               title={`Reporter le budget non facturé sur ${AN(1)} : ${fmt(nf)}`}
                               onClick={()=>{
                                 setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));
@@ -1220,9 +1227,8 @@ export default function App() {
                                 background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
                               → {AN(1)}
                             </button>
-                      )}
-                      <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
-                    </div>
+                          </div>
+                    )}
                   </td>
                   {/* B2 à B5 initial + révisé */}
                   {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col],i)=>{
@@ -1329,28 +1335,28 @@ export default function App() {
                       {/* F Facturé */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",fontSize:12}}>{fmt(o.facture)}</td>
                       {/* FAR */}
-                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12}}>
+                      <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12,verticalAlign:"top"}}>
                         {f>0
-                          ? <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                          ? <>
                               <strong>{fmt(f)}</strong>
                               {!reviseValide && (
                                 reports[o.id]?.rt==="far"
-                                  ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                                  ? <div style={{marginTop:3}}><span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
                                       title="Annuler ce report"
                                       onClick={()=>setReports(prev=>{
                                         const next={...prev};
                                         delete next[o.id];
                                         return next;
-                                      })}>→ {AN(1)} ✕</span>
-                                  : <button
+                                      })}>→ {AN(1)} ✕</span></div>
+                                  : <div style={{marginTop:3}}><button
                                       title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
                                       onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
                                       style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
                                         background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
                                       → {AN(1)}
-                                    </button>
+                                    </button></div>
                               )}
-                            </div>
+                            </>
                           : <span style={{color:"#ccc"}}>—</span>}
                       </td>
                       {/* NE */}
