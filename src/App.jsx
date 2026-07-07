@@ -551,6 +551,8 @@ export default function App() {
   // Données simulées : E et F évoluent avec la courbe logarithmique
   const simData = capexData.map(a => {
     if(isJan1) return {...a, os_total:0, facture:0, os:a.os.map(o=>({...o,montant:0,facture:0}))};
+    // Ne simuler E et F que si la ligne a des OS ouverts
+    if(a.os.length === 0) return {...a, os_total:0, facture:0};
     const {e: ec, f: fc} = coeff(a.os_total, a.facture);
     // Valeurs max = B1 (budget de l'année), plancher = valeurs initiales au 1er jan
     const eMax = a.B1;
