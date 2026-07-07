@@ -693,13 +693,12 @@ export default function App() {
                   onConfirm:()=>{
                     setCapexData(prev => prev.map(a => {
                       const rep = calcTotalReport(a, reports);
-                      // B2' = override si différent du validé, sinon B2 + report si report actif
+                      const repB2 = calcTotalReportB2(a, reports);
                       const getB = (n) => {
                         const ovr = overrides[a.id]?.[`B${n}rev`];
                         const init = a[`B${n}`];
-                        // Si override = valeur initiale (set par ↺), on ignore et applique la formule
                         if (ovr !== undefined && ovr !== init) return ovr;
-                        if (n === 2 && rep > 0) return init + rep;
+                        if (n === 2 && repB2 > 0) return init + repB2;
                         return init;
                       };
                       const newB1 = getB(2);
@@ -1027,7 +1026,7 @@ export default function App() {
               const totalRev  = (B1rev!==null?B1rev:0) + (B2rev!==null?B2rev:0) +
                                 (overrides[a.id]?.B3rev??0) + (overrides[a.id]?.B4rev??0) +
                                 (overrides[a.id]?.B5rev??0) + (overrides[a.id]?.B6rev??0);
-              const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
+              const hasRowRev = calcTotalReport(a,reports)>0 || calcTotalReportB2(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
               const isLineValidated = validatedLines.has(a.id);
               const isBlocked = reviseValide || isLineValidated;
               const isLast   = ai===simData.length-1;
@@ -1293,9 +1292,11 @@ export default function App() {
                       {td(null,{background:"#fafaf8",borderRight:"1px solid #444"})}
                       {/* B1 Validé */}
                       {td(null,{borderLeft:"1px solid #ddd"})}
-                      {/* B1 Révisé — affiche le report si OS a un report */}
+                      {/* B1 Révisé — affiche le report sauf si FAR (FAR va en B2') */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#fafaf8"}}>
-                        {oRep?.report>0?<span style={{color:"#185FA5",fontWeight:600}}>+{fmt(oRep.report)}</span>:<span style={{color:"#ccc"}}>—</span>}
+                        {oRep?.report>0 && oRep?.rt!=="far"
+                          ? <span style={{color:"#185FA5",fontWeight:600}}>+{fmt(oRep.report)}</span>
+                          : <span style={{color:"#ccc"}}>—</span>}
                       </td>
                       {/* E OS engagés */}
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,background:"#F0F7F2",borderLeft:"1px solid #b0d8b8",color:"#185FA5",fontSize:12}}>{fmt(o.montant)}</td>
