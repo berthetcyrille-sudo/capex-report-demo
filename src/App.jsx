@@ -258,7 +258,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
       const next = {...prev};
       if (type==="full")     { next[a.id]={report:a.B1, rt:"full"}; }
       if (type==="ne")      { next[a.id]={report:ne, rt:"ne"}; }
-      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0)next[o.id]={report:calcFar(o),rt:"report"};}); next[a.id]={...(next[a.id]||{}),rt:"far"}; }
+      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0) next[o.id]={report:calcFar(o),rt:"far"};}); delete next[a.id]; }
       if (type==="nf")      { next[a.id]={report:nf, rt:"nf"}; }
       if (type==="manu")    { next[a.id]={report:val,rt:"manu"}; }
       if (type==="conserve"){ const r=Math.max(0,a.budget-a.facture-val); next[a.id]={report:r,rt:"conserve"}; }
@@ -301,30 +301,30 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
               onMouseEnter={e=>{ if(a.os_total===0) e.currentTarget.style.background="#f5f5f3"; }}
               onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               <div style={{ flex:1, fontWeight:500, lineHeight:1.3 }}>
-                Report complet du budget {AN(0)} sur {AN(1)} ({fmt(a.B1)})
+                Report intégral — tout le budget {AN(0)} ({fmt(a.B1)})
                 {a.os_total>0 && <div style={{fontSize:10,color:"#bbb",fontWeight:400}}>Non disponible — OS ouverts sur cette opération</div>}
               </div>
               <Tooltip text={TIPS["full"]} />
             </div>
             <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
             {a.os_total === 0 ? <>
-              {/* Pas d'OS — seulement saisie manuelle en complément */}
               {bmf>0 && <>
-                <CtxItem label="Montant saisi manuellement" tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
-                {showManu && <InputRow label={`Montant à reporter (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
+                <CtxItem label={`Reporter un montant partiel → saisir le montant à reporter`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                {showManu && <InputRow label={`Montant à reporter sur ${AN(1)} (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
               </>}
             </> : <>
               {/* OS ouverts — actions détaillées */}
-              {ne>0  && <CtxItem label={`Budget sans OS — NE (${fmt(ne)})`}           tipKey="ne"  onClick={()=>apply("ne")} />}
-              {far>0 && <CtxItem label={`FAR sur OS émis — E−F (${fmt(far)})`}        tipKey="far" onClick={()=>apply("far")} />}
-              {nf>0  && <CtxItem label={`Budget non facturé — NF=B1−F (${fmt(nf)})`}  tipKey="nf"  onClick={()=>apply("nf")} />}
-              {bmf>0 && <>
-                <CtxItem label="Montant saisi manuellement" tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
-                {showManu && <InputRow label={`Montant à reporter (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
-              </>}
+              {ne>0  && <CtxItem label={`Reporter le budget non engagé — NE = ${fmt(ne)}`}     tipKey="ne"  onClick={()=>apply("ne")} />}
+              {far>0 && <CtxItem label={`Reporter les FAR sur OS émis — FAR = ${fmt(far)}`}    tipKey="far" onClick={()=>apply("far")} />}
+              {nf>0  && <CtxItem label={`Reporter tout le budget non facturé — NF = ${fmt(nf)}`} tipKey="nf"  onClick={()=>apply("nf")} />}
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
+              <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
-                <CtxItem label="Saisir le budget complémentaire à conserver et reporter le solde" tipKey="conserve" onClick={()=>setShowConserve(s=>!s)} />
+                <CtxItem label={`Je saisis le montant à reporter sur ${AN(1)}`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                {showManu && <InputRow label={`Montant à reporter sur ${AN(1)} (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
+              </>}
+              {bmf>0 && <>
+                <CtxItem label={`Je saisis ce que je conserve en ${AN(0)}, le solde part en ${AN(1)}`} tipKey="conserve" onClick={()=>setShowConserve(s=>!s)} />
                 {showConserve && <InputRowConserve facture={a.facture} budget={a.budget} onApply={v=>apply("conserve",v)} AN={AN} />}
               </>}
             </>}
@@ -998,6 +998,8 @@ export default function App() {
             {simData.map((a, ai) => {
               const totalRep = calcTotalReport(a, reports);
               const rep      = reports[a.id];
+              // Si pas de report sur a.id mais des reports sur les OS → FAR
+              const rt = rep?.rt ?? (a.os.some(o=>reports[o.id]?.rt==="far") ? "far" : null);
               const ne       = calcNE(a);
               const far      = calcTfar(a);
               const nf       = calcNF(a);
@@ -1016,7 +1018,6 @@ export default function App() {
               const isBlocked = reviseValide || isLineValidated;
               const isLast   = ai===simData.length-1;
               const bbot     = isLast&&!expanded.has(a.id)?"none":"0.5px solid #eee";
-              const rt = rep?.rt;
               const rtLabels = {far:"FAR",ne:"NE",nf:"NF",manu:"MANUEL",conserve:"SOLDE",full:"COMPLET"};
               const rtColors = {far:"#27500A|#EAF3DE",ne:"#854F0B|#FAEEDA",nf:"#5C3D00|#FEF0D0",manu:"#0C447C|#E6F1FB",conserve:"#0C447C|#E6F1FB",full:"#3a0a6e|#ede0ff"};
               const [rtC,rtBg] = (rtColors[rt]||"#555|#eee").split("|");
@@ -1079,7 +1080,8 @@ export default function App() {
                     const detail = () => {
                       if (hasOverride) return <span style={{fontSize:9,color:"#c08030"}}>✎ saisi manuellement</span>;
                       if (rt==="full")     return <span style={{fontSize:10,color:"#7090CC"}}>Budget complet reporté sur {AN(1)}</span>;
-                      if (rt==="far")     return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + Non engagé {fmt(neVal)}</span>;
+                      if (rt==="far")     { const farOS=a.os.filter(o=>reports[o.id]?.rt==="far"); return <span style={{fontSize:10,color:"#7090CC"}}>FAR reportés sur {farOS.length} OS · {fmt(farOS.reduce((s,o)=>s+reports[o.id].report,0))}</span>; }
+                      if (rt==="nf")      return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)}</span>;
                       if (rt==="ne")      return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + FAR {fmt(farVal)}</span>;
                       if (rt==="manu")    return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + reste {fmt(B1rev-f)}</span>;
                       if (rt==="conserve"){ const conserve=B1rev-f; return <span style={{fontSize:10,color:"#7090CC"}}>Facturé {fmt(f)} + conservé {fmt(conserve)}</span>; }
