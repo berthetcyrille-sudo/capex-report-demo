@@ -296,30 +296,14 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
             <div style={{ fontSize:11, fontWeight:600, color:"#555", padding:"6px 12px 4px", borderTop:"0.5px solid #eee" }}>
               Reporter sur {AN(1)} :
             </div>
-            {/* Report complet — grisé si OS ouverts */}
-            <div style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"7px 12px",
-              fontSize:12, opacity: a.os_total>0 ? 0.4 : 1,
-              cursor: a.os_total>0 ? "not-allowed" : "pointer",
-              color: a.os_total>0 ? "#999" : "inherit" }}
-              onClick={()=>{ if(a.os_total===0) apply("full"); }}
-              onMouseEnter={e=>{ if(a.os_total===0) e.currentTarget.style.background="#f5f5f3"; }}
-              onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              <div style={{ flex:1, fontWeight:500, lineHeight:1.3 }}>
-                Report intégral — tout le budget {AN(0)} ({fmt(a.B1)})
-                {a.os_total>0 && <div style={{fontSize:10,color:"#bbb",fontWeight:400}}>Non disponible — OS ouverts sur cette opération</div>}
-              </div>
-              <Tooltip text={TIPS["full"]} />
-            </div>
-            <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
             {a.os_total === 0 ? <>
+              <div style={{fontSize:11,color:"#aaa",padding:"4px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
-                <CtxItem label={`Reporter un montant partiel → saisir le montant à reporter`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
+                <CtxItem label={`Je saisis le montant à reporter sur ${AN(1)}`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
                 {showManu && <InputRow label={`Montant à reporter sur ${AN(1)} (€) — max ${fmt(bmf)} :`} max={bmf} onApply={v=>apply("manu",v)} />}
               </>}
             </> : <>
-              {/* OS ouverts — actions détaillées */}
               {/* NE et NF déplacés sur les cellules directement */}
-              <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
               <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
                 <CtxItem label={`Je saisis le montant à reporter sur ${AN(1)}`} tipKey="manu" onClick={()=>setShowManu(s=>!s)} />
