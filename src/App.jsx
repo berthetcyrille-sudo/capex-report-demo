@@ -258,7 +258,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
       const next = {...prev};
       if (type==="full")     { next[a.id]={report:a.B1, rt:"full"}; }
       if (type==="ne")      { next[a.id]={report:ne, rt:"ne"}; }
-      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0) next[o.id]={report:calcFar(o),rt:"far"};}); delete next[a.id]; }
+      if (type==="far")     { a.os.forEach(o=>{if(calcFar(o)>0) next[o.id]={report:calcFar(o),rt:"far"};}); next[a.id]={...(next[a.id]||{}),report:calcTfar(a),rt:"far"}; }
       if (type==="nf")      { next[a.id]={report:nf, rt:"nf"}; }
       if (type==="manu")    { next[a.id]={report:val,rt:"manu"}; }
       if (type==="conserve"){ const r=Math.max(0,a.budget-a.facture-val); next[a.id]={report:r,rt:"conserve"}; }
@@ -1292,17 +1292,7 @@ export default function App() {
                         {f>0
                           ? <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                               <strong style={{color:"inherit"}}>{fmt(f)}</strong>
-                              {!reviseValide && (
-                                reports[o.id]?.rt==="far"
-                                  ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>✓</span>
-                                  : <button
-                                      onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
-                                      title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
-                                      style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
-                                        background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
-                                      → {AN(1)}
-                                    </button>
-                              )}
+                              {reports[o.id]?.rt==="far" && <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>→ {AN(1)}</span>}
                             </div>
                           : <span style={{color:"#ccc"}}>—</span>}
                       </td>
