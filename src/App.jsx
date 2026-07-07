@@ -109,21 +109,12 @@ const fmt = (n) => n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",max
 
 function calcTotalReport(a, reports) {
   const ar  = reports[a.id]?.report || 0;
-  // Exclure les reports FAR des OS du calcul de B1' (ils alimentent B2' sans réduire B1')
-  const osr = a.os.reduce((s,o) => {
-    const r = reports[o.id];
-    if(!r) return s;
-    if(r.rt==="far") return s; // FAR → va en B2' sans toucher B1'
-    return s + (r.report||0);
-  }, 0);
+  const osr = a.os.reduce((s,o) => s+(reports[o.id]?.report||0), 0);
   return ar + osr;
 }
 
 function calcTotalReportB2(a, reports) {
-  // Pour B2' : inclut les FAR des OS
-  const ar  = reports[a.id]?.report || 0;
-  const osr = a.os.reduce((s,o) => s+(reports[o.id]?.report||0), 0);
-  return ar + osr;
+  return calcTotalReport(a, reports);
 }
 
 // ─── Tooltip ────────────────────────────────────────────────────────────────
@@ -1007,8 +998,11 @@ export default function App() {
           </thead>
           <tbody>
             {simData.map((a, ai) => {
-              const totalRep  = calcTotalReport(a, reports);   // pour B1' (hors FAR OS)
-              const totalRepB2 = calcTotalReportB2(a, reports); // pour B2' (avec FAR OS)
+              // totalRep = report sur la ligne (hors OS) + reports FAR sur chaque OS
+              const lineRep    = reports[a.id]?.report || 0;
+              const farOSTotal = a.os.reduce((s,o)=>s+(reports[o.id]?.report||0), 0);
+              const totalRep   = lineRep + farOSTotal;
+              const totalRepB2 = totalRep;
               const rep      = reports[a.id];
               // Si pas de report sur a.id mais des reports sur les OS → FAR
               const rt = rep?.rt ?? (a.os.some(o=>reports[o.id]?.rt==="far") ? "far" : null);
