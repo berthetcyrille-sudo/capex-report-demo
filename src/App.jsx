@@ -319,7 +319,6 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
             </> : <>
               {/* OS ouverts — actions détaillées */}
               {ne>0  && <CtxItem label={`Reporter le budget non engagé — NE = ${fmt(ne)}`}     tipKey="ne"  onClick={()=>apply("ne")} />}
-              {nf>0  && <CtxItem label={`Reporter tout le budget non facturé — NF = ${fmt(nf)}`} tipKey="nf"  onClick={()=>apply("nf")} />}
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
               <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
               {bmf>0 && <>
@@ -1083,6 +1082,7 @@ export default function App() {
                     const f = a.facture;
                     const farVal = calcTfar(a);
                     const neVal  = calcNE(a);
+                    if(ai===0) console.log("DEBUG PAC:", {totalRep, lineRep, farOSTotal, B1rev, isActive, displayVal, reportsKeys: Object.keys(reports)});
                     // Détail de composition selon l'action
                     const detail = () => {
                       if (hasOverride) return <span style={{fontSize:9,color:"#c08030"}}>✎ saisi manuellement</span>;
@@ -1185,10 +1185,32 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee"}}>
                     {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                   </td>
-                  {/* Non facturé + menu ⋮ + bouton validation ligne */}
+                  {/* Non facturé + menu ⋮ */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
                       <span>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
+                      {nf>0 && !isBlocked && (
+                        reports[a.id]?.rt==="nf"
+                          ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                              title="Annuler ce report"
+                              onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>
+                              → {AN(1)} ✕
+                            </span>
+                          : <button
+                              title={`Reporter le budget non facturé sur ${AN(1)} : ${fmt(nf)}`}
+                              onClick={()=>{
+                                setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));
+                                setOverrides(prev=>{
+                                  const next={...prev};
+                                  if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}
+                                  return next;
+                                });
+                              }}
+                              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                                background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                              → {AN(1)}
+                            </button>
+                      )}
                       <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />
                     </div>
                   </td>
