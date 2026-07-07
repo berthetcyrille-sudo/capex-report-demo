@@ -315,7 +315,6 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
             </> : <>
               {/* OS ouverts — actions détaillées */}
               {ne>0  && <CtxItem label={`Reporter le budget non engagé — NE = ${fmt(ne)}`}     tipKey="ne"  onClick={()=>apply("ne")} />}
-              {far>0 && <CtxItem label={`Reporter les FAR sur OS émis — FAR = ${fmt(far)}`}    tipKey="far" onClick={()=>apply("far")} />}
               {nf>0  && <CtxItem label={`Reporter tout le budget non facturé — NF = ${fmt(nf)}`} tipKey="nf"  onClick={()=>apply("nf")} />}
               <hr style={{ border:"none", borderTop:"0.5px solid #eee", margin:"2px 0" }} />
               <div style={{fontSize:10,color:"#aaa",padding:"3px 12px",fontStyle:"italic"}}>Report partiel — saisie manuelle</div>
@@ -1291,8 +1290,34 @@ export default function App() {
                       <td style={{textAlign:"right",padding:"6px 10px",borderBottom:bsep,borderLeft:"1px solid #d8b898",background:"#fdf5ee",fontSize:12}}>
                         {f>0
                           ? <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
-                              <strong style={{color:"inherit"}}>{fmt(f)}</strong>
-                              {reports[o.id]?.rt==="far" && <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px"}}>→ {AN(1)}</span>}
+                              <strong>{fmt(f)}</strong>
+                              {!reviseValide && (
+                                reports[o.id]?.rt==="far"
+                                  ? <span style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",cursor:"pointer"}}
+                                      title="Annuler ce report"
+                                      onClick={()=>setReports(prev=>{
+                                        const next={...prev};
+                                        delete next[o.id];
+                                        // recalculer le total FAR sur a.id
+                                        const remaining = a.os.filter(x=>x.id!==o.id&&next[x.id]?.rt==="far").reduce((s,x)=>s+(next[x.id]?.report||0),0);
+                                        if(remaining>0) next[a.id]={report:remaining,rt:"far"};
+                                        else delete next[a.id];
+                                        return next;
+                                      })}>→ {AN(1)} ✕</span>
+                                  : <button
+                                      title={`Reporter le FAR de cet OS sur ${AN(1)} : ${fmt(f)}`}
+                                      onClick={()=>setReports(prev=>{
+                                        const next={...prev,[o.id]:{report:f,rt:"far"}};
+                                        // mettre à jour le total sur a.id
+                                        const total = a.os.reduce((s,x)=>s+(next[x.id]?.rt==="far"?next[x.id].report:0),0);
+                                        next[a.id]={report:total,rt:"far"};
+                                        return next;
+                                      })}
+                                      style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d8b898",
+                                        background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>
+                                      → {AN(1)}
+                                    </button>
+                              )}
                             </div>
                           : <span style={{color:"#ccc"}}>—</span>}
                       </td>
