@@ -1200,7 +1200,7 @@ export default function App() {
                   </td>
                   {/* B2 à B5 initial + révisé */}
                   {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col],i)=>{
-                    const autoVal = col==="B2rev" && totalRep>0 ? a[init]+totalRep : null;
+                    const autoVal = col==="B2rev" && totalRepB2>0 ? a[init]+totalRepB2 : null;
                     const hasOvr  = overrides[a.id]?.[col] !== undefined;
                     const dispVal = hasOvr ? overrides[a.id][col] : autoVal;
                     const isEdit  = editing?.id===a.id && editing?.col===col;
