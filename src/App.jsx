@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import React from "react";
 
 // AN(n) est recalculé dynamiquement depuis le state dateSimu dans App
 
@@ -1164,35 +1165,16 @@ export default function App() {
                     {fmt(a.facture)}
                   </td>
                   {/* FAR */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #d8b898",background:"#fdf5ee",verticalAlign:"middle"}}>
                     {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* Non engagé */}
-                  <td style={{padding:"6px 8px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle"}}>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",justifyContent:"space-between",height:"100%",minHeight:40,gap:4}}>
-                      <span style={{fontSize:13,textAlign:"right"}}>{ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}</span>
-                      {!isBlocked && ne>0 && (reports[a.id]?.rt==="ne"
-                        ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer",alignSelf:"flex-end"}}
-                            onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
-                        : <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
-                            style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600,alignSelf:"flex-end"}}>→ {AN(1)}</button>
-                      )}
-                    </div>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",background:"#fdf5ee",verticalAlign:"middle"}}>
+                    {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                   </td>
-                  {/* Non facturé + actions */}
-                  <td style={{padding:"6px 8px",borderBottom:bbot,verticalAlign:"middle"}}>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",justifyContent:"space-between",height:"100%",minHeight:40,gap:4}}>
-                      <span style={{fontSize:13,textAlign:"right"}}>{nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}</span>
-                      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-                        {!isBlocked && nf>0 && (reports[a.id]?.rt==="nf"
-                          ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
-                              onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
-                          : <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
-                              style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
-                        )}
-                        {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
-                      </div>
-                    </div>
+                  {/* Non facturé */}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",verticalAlign:"middle"}}>
+                    {nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}
                   </td>
                   {/* B2 à B5 initial + révisé */}
                   {[["B2","B2rev"],["B3","B3rev"],["B4","B4rev"],["B5","B5rev"],["B6","B6rev"]].map(([init,col],i)=>{
@@ -1261,6 +1243,48 @@ export default function App() {
                       )}
                     </div>
                   </td>
+                </tr>,
+
+                /* Ligne d'actions — invisible, collée sous la ligne de données */
+                <tr key={a.id+"-actions"} style={{background:"inherit"}}>
+                  {/* chevron + label + clé + total×2 + B1 validé + B1rev = 6 cols */}
+                  <td style={{padding:0,borderBottom:bbot}}></td>
+                  <td style={{padding:0,borderBottom:bbot}}></td>
+                  <td style={{padding:0,borderBottom:bbot}}></td>
+                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #444"}}></td>
+                  <td style={{padding:0,borderBottom:bbot,borderRight:"1px solid #444"}}></td>
+                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td>
+                  <td style={{padding:0,borderBottom:bbot}}></td>
+                  {/* E + F vides */}
+                  <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2",borderLeft:"1px solid #b0d8b8"}}></td>
+                  <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2"}}></td>
+                  {/* FAR — bouton si applicable */}
+                  <td style={{padding:"0 8px 4px",borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee",textAlign:"right"}}>
+                  </td>
+                  {/* NE — bouton */}
+                  <td style={{padding:"0 8px 4px",borderBottom:bbot,background:"#fdf5ee",textAlign:"right"}}>
+                    {!isBlocked && ne>0 && (reports[a.id]?.rt==="ne"
+                      ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
+                          onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
+                      : <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
+                          style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
+                    )}
+                  </td>
+                  {/* NF — boutons → + ← → */}
+                  <td style={{padding:"0 8px 4px",borderBottom:bbot,textAlign:"right"}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                      {!isBlocked && nf>0 && (reports[a.id]?.rt==="nf"
+                        ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
+                            onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>
+                        : <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}}
+                            style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
+                      )}
+                      {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
+                    </div>
+                  </td>
+                  {/* B2→B6 vides */}
+                  {[0,1,2,3,4].map(i=><React.Fragment key={i}><td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td><td style={{padding:0,borderBottom:bbot}}></td></React.Fragment>)}
+                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td>
                 </tr>,
 
                 ...(expanded.has(a.id) ? a.os.map((o,oi)=>{
