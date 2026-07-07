@@ -844,7 +844,8 @@ export default function App() {
                       background: reviseValide?"#f5f5f5":"#f0f5ff",
                       color: reviseValide?"#ccc":"#2a5a8a",
                       cursor: reviseValide?"default":"pointer",
-                      fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}>
+                      fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}
+                    title={`Remet les budgets révisés de ${AN(2)} à ${AN(5)} au niveau du budget validé pour toutes les lignes. Ne touche pas à ${AN(1)} (géré par les actions de report).`}>
                     ↺ Tout au validé
                   </button>
                 </div>
@@ -924,7 +925,8 @@ export default function App() {
                           background: reviseValide?"#f5f5f5":"#f0f5ff",
                           color: reviseValide?"#ccc":"#2a5a8a",
                           cursor: reviseValide?"default":"pointer",
-                          fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}>
+                          fontWeight:600,whiteSpace:"nowrap",opacity:reviseValide?0.5:1}}
+                        title={`Remet le budget révisé ${AN(i)} au niveau du budget validé pour toutes les lignes.`}>
                         ↺ Validé
                       </button>
                     </div>
@@ -1006,7 +1008,9 @@ export default function App() {
               const B5rev    = overrides[a.id]?.B5rev ?? null;
               const B6rev    = overrides[a.id]?.B6rev ?? null;
               const totalInit = a.B1+a.B2+a.B3+a.B4+a.B5+a.B6;
-              const totalRev  = (B1rev??a.B1) + (B2rev??a.B2) + (overrides[a.id]?.B3rev??a.B3) + (overrides[a.id]?.B4rev??a.B4) + (overrides[a.id]?.B5rev??a.B5) + (overrides[a.id]?.B6rev??a.B6);
+              const totalRev  = (B1rev!==null?B1rev:0) + (B2rev!==null?B2rev:0) +
+                                (overrides[a.id]?.B3rev??0) + (overrides[a.id]?.B4rev??0) +
+                                (overrides[a.id]?.B5rev??0) + (overrides[a.id]?.B6rev??0);
               const hasRowRev = calcTotalReport(a,reports)>0 || (overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
               const isLineValidated = validatedLines.has(a.id);
               const isBlocked = reviseValide || isLineValidated;
