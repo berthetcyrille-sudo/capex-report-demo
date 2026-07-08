@@ -412,6 +412,7 @@ function AddLineModal({ AN, onClose, onAdd }) {
   const [label, setLabel] = useState("");
   const [sub,   setSub]   = useState("");
   const [type,  setType]  = useState("DTQ");
+  const [montant, setMontant] = useState("");
   const handleAdd = () => {
     if(!label.trim()){ alert("Le libellé est obligatoire."); return; }
     onAdd({
@@ -422,6 +423,7 @@ function AddLineModal({ AN, onClose, onAdd }) {
       budget:0, os_total:0, facture:0,
       B1:0, B2:0, B3:0, B4:0, B5:0, B6:0,
       os:[],
+      _montantHT: parseFloat(montant)||0,
     });
   };
   return (
@@ -455,7 +457,13 @@ function AddLineModal({ AN, onClose, onAdd }) {
               ))}
             </div>
           </div>
-          <div style={{fontSize:11,color:"#aaa",fontStyle:"italic"}}>Les budgets pourront être saisis directement dans le tableau.</div>
+          <div style={{fontSize:11,color:"#aaa",fontStyle:"italic"}}>Les budgets pluriannuels pourront être saisis directement dans le tableau.</div>
+          <div>
+            <label style={{fontSize:11,color:"#888"}}>Montant HT <span style={{color:"#bbb"}}>(budget de l'année en cours — remplit B1' Révisé)</span></label>
+            <input type="number" value={montant} onChange={e=>setMontant(e.target.value)}
+              placeholder="ex: 150000"
+              style={{width:"100%",padding:"6px 10px",borderRadius:6,border:"1px solid #ddd",fontSize:13,boxSizing:"border-box",marginTop:3}} />
+          </div>
         </div>
         <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:20}}>
           <button onClick={onClose}
@@ -791,9 +799,13 @@ export default function App() {
         AN={AN}
         onClose={()=>setAddLineModal(false)}
         onAdd={(newLine)=>{
-          setCapexData(prev=>[...prev, newLine]);
+          const {_montantHT, ...line} = newLine;
+          setCapexData(prev=>[...prev, line]);
+          if(_montantHT > 0){
+            setOverrides(prev=>({...prev, [line.id]:{...prev[line.id], B1rev:_montantHT}}));
+          }
           setAddLineModal(false);
-          toast(`"${newLine.label}" ajoutée au plan CAPEX.`,"success");
+          toast(`"${line.label}" ajoutée au plan CAPEX.`,"success");
         }}
       />}
 
