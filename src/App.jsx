@@ -662,7 +662,7 @@ export default function App() {
   const hasAnyRev  = totReport>0 || capexData.some(a=>a.os.some(o=>reports[o.id]?.rt==="far")) || capexData.some(a=>overrides[a.id] && Object.keys(overrides[a.id]).some(k=>k.endsWith("rev")));
 
   const toastColors = { info:"#0C447C|#E6F1FB|#B5D4F4", warning:"#633806|#FAEEDA|#FAC775", success:"#27500A|#EAF3DE|#C0DD97", err:"#791F1F|#FCEBEB|#F7C1C1" };
-  const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"3px 8px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap", lineHeight:"1.2" };
+  const thS = { fontSize:11, fontWeight:500, color:"#888", padding:"3px 8px", borderBottom:"0.5px solid #eee", whiteSpace:"nowrap", lineHeight:"1.2", background:"#f5f5f0" };
 
   return (
     <div style={{ fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", padding:"1rem 2rem", color:"#1a1a18" }}>
