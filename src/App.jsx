@@ -990,7 +990,7 @@ export default function App() {
             </tr>
             {/* Ligne 3 : colonnes */}
             <tr style={{ background:"#f5f5f0" }}>
-              <th colSpan={3} style={{ ...thS, position:"sticky", left:0, zIndex:31, background:"#f5f5f0", boxShadow:"3px 0 8px rgba(0,0,0,0.08)", padding:0 }}>
+              <th colSpan={3} style={{ ...thS, position:"sticky", left:0, zIndex:31, background:"#f5f5f0", boxShadow:"3px 0 8px rgba(0,0,0,0.08)", padding:0, minWidth:270, width:270 }}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 8px"}}>
                   <span>Opération / OS</span>
                   <span>Clé</span>
@@ -1087,7 +1087,7 @@ export default function App() {
               return [
                 <tr key={a.id} className="data-row">
                   {/* Identification — figée au scroll horizontal */}
-                  <td colSpan={3} style={{padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",background:"#fff",
+                  <td colSpan={3} style={{padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",background:"#fff",minWidth:270,width:270,
                     position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.08)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6}}>
                       <button onClick={()=>toggleExpand(a.id)}
@@ -1341,7 +1341,7 @@ export default function App() {
                   return (
                     <tr key={o.id} style={{background:"#f7f7f5"}}>
                       {/* chevron */}
-                      <td colSpan={3} style={{padding:"6px 10px",borderBottom:bsep,fontSize:12,background:"#f7f7f5",
+                      <td colSpan={3} style={{padding:"6px 10px",borderBottom:bsep,fontSize:12,background:"#f7f7f5",minWidth:270,width:270,
                         position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.06)"}}>
                         <span style={{color:"#ccc",marginRight:4}}>↳</span>
                         <strong>{o.id.toUpperCase()}</strong>
@@ -1398,7 +1398,7 @@ export default function App() {
                   const nbCols = 16; // B2→B6 = 10 + commentaire + 5 autres
                   return (
                     <tr key={`histo-${a.id}-${h.annee}`} style={{background:"#f0f0f8"}}>
-                      <td colSpan={3} style={{padding:"5px 10px",borderBottom:bsepH,fontSize:11,color:"#666",
+                      <td colSpan={3} style={{padding:"5px 10px",borderBottom:bsepH,fontSize:11,color:"#666",minWidth:270,width:270,
                         background:"#f0f0f8",position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.06)"}}>
                         <span style={{color:"#aaa",marginRight:4}}>📅</span>
                         <strong style={{color:"#185FA5"}}>{h.annee}</strong>
@@ -1428,7 +1428,7 @@ export default function App() {
 
             {/* Ligne total — flottante */}
             <tr className="capex-sticky-total" style={{fontWeight:500, color:"#fff", borderTop:"1px solid #555", boxShadow:"0 -2px 8px rgba(0,0,0,0.25)"}}>
-              <td colSpan={3} style={{padding:"9px 10px",borderBottom:"none",fontWeight:700,fontSize:14,background:"#1a1a18",
+              <td colSpan={3} style={{padding:"9px 10px",borderBottom:"none",fontWeight:700,fontSize:14,background:"#1a1a18",minWidth:270,width:270,
                 position:"sticky",left:0,zIndex:20,boxShadow:"3px 0 8px rgba(0,0,0,0.2)"}}>Total</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #444",background:"#1e2a38",color:"#fff",fontWeight:600}}>{fmt(totInitial)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd",fontWeight:600,borderRight:"1px solid #444"}}>
