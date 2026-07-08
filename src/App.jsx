@@ -854,11 +854,15 @@ export default function App() {
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
 
         /* Colonnes d'identification figées au scroll horizontal */
+        /* Col 0 = chevron (32px), Col 1 = label (180px), Col 2 = clé (58px) */
         .capex-table th.sticky-col,
         .capex-table td.sticky-col { position: sticky; z-index: 10; }
-        .capex-col-0 { left: 0px; }
-        .capex-col-1 { left: 32px; }
-        .capex-col-2 { left: 212px; box-shadow: 2px 0 6px rgba(0,0,0,0.06); }
+        .capex-col-0 { left: 0px; min-width:32px; max-width:32px; }
+        .capex-col-1 { left: 32px; min-width:180px; }
+        .capex-col-2 { left: 212px; min-width:58px; max-width:58px; border-right: 1px solid #e0e0e0 !important; }
+        /* Ombre portée à droite de la dernière colonne figée */
+        .capex-table td.capex-col-2,
+        .capex-table th.capex-col-2 { box-shadow: 3px 0 8px rgba(0,0,0,0.08); }
 
         /* Dans le thead, z-index plus élevé pour passer au-dessus du tbody sticky */
         .capex-table thead th.sticky-col { z-index: 30; }
@@ -868,7 +872,9 @@ export default function App() {
           <thead ref={theadRef}>
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
-              <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12 }} className="sticky-col capex-col-0">Identification</th>
+              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, width:32 }} className="sticky-col capex-col-0"></th>
+              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, minWidth:180 }} className="sticky-col capex-col-1">Identification</th>
+              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", width:58 }} className="sticky-col capex-col-2"></th>
               <th colSpan={2} style={{ ...thG, color:"#fff", background:"#2a2a26", borderLeft:"1px solid #444", borderRight:"1px solid #444" }}>Total {AN(0)}→{AN(5)}</th>
               <th colSpan={7} style={{ ...thG, color:"#fff", background:"#2a5a8a", borderLeft:"1px solid #d0d8e8" }}>{AN(0)}</th>
               {[1,2,3,4,5].map(i => (
@@ -878,7 +884,9 @@ export default function App() {
             </tr>
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
-              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }} className="sticky-col capex-col-0"></th>
+              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", width:32 }} className="sticky-col capex-col-0"></th>
+              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", minWidth:180 }} className="sticky-col capex-col-1"></th>
+              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", width:58 }} className="sticky-col capex-col-2"></th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
                   <span>Budget pluriannuel</span>
