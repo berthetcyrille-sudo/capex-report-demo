@@ -289,7 +289,7 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
           background: disabled?"#f5f5f5":"#fff3e8",
           color: disabled?"#ccc":"#8a4020",
           cursor:disabled?"default":"pointer", fontWeight:600,
-          opacity: disabled?0.5:1, whiteSpace:"nowrap" }}>{AN(0)} ← → {AN(1)}</button>
+          opacity: disabled?0.5:1, whiteSpace:"nowrap" }}>→ {AN(0)}/{AN(1)}</button>
       {open && (
         <>
           <div onClick={()=>{setOpen(false);setShowManu(false);setShowConserve(false);}}
