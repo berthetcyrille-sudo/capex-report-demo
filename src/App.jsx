@@ -1112,48 +1112,49 @@ export default function App() {
                               onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                               style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                           : isActive
-                            ? <div style={{display:"flex",alignItems:"center",gap:4,justifyContent:"flex-end"}}>
-                                <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
-                                  onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
-                                  onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
-                                  <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
-                                  {detail() && <>
-                                    <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
-                                    <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
-                                      width:220,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
-                                      fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
-                                      {detail()}
-                                    </div>
-                                  </>}
+                            ? <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                                <div style={{display:"flex",alignItems:"center",gap:4,justifyContent:"flex-end"}}>
+                                  <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
+                                    onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
+                                    onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
+                                    <span style={{color:"#b05000",fontWeight:600}}>{fmt(displayVal)}</span>
+                                    {detail() && <>
+                                      <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
+                                      <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
+                                        width:220,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
+                                        fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
+                                        {detail()}
+                                      </div>
+                                    </>}
+                                  </div>
+                                  {a.id.startsWith("custom_") && (
+                                    validatedLines.has(a.id)
+                                      ? <span title="Budget validé" style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",flexShrink:0}}>✓ validé</span>
+                                      : <button onClick={()=>setConfirmModal({
+                                            msg:`Valider le budget de "${a.label}" à ${fmt(displayVal)} ? Ce montant sera transféré en budget validé et la ligne sera figée.`,
+                                            onConfirm:()=>{
+                                              setCapexData(prev=>prev.map(x=>x.id===a.id ? {...x, B1: displayVal} : x));
+                                              setOverrides(prev=>{
+                                                const next={...prev};
+                                                if(next[a.id]?.B1rev!==undefined){
+                                                  const {B1rev,...rest}=next[a.id];
+                                                  if(Object.keys(rest).length) next[a.id]=rest;
+                                                  else delete next[a.id];
+                                                }
+                                                return next;
+                                              });
+                                              setValidatedLines(prev=>new Set([...prev,a.id]));
+                                              toast(`"${a.label}" — ${fmt(displayVal)} transféré en budget validé.`,"success");
+                                            }
+                                          })}
+                                          title="Valider et transférer en budget validé"
+                                          style={{fontSize:10,padding:"1px 6px",borderRadius:4,border:"0.5px solid #3A7A4A",
+                                            background:"#EAF3DE",color:"#27500A",cursor:"pointer",fontWeight:600,flexShrink:0,whiteSpace:"nowrap"}}>
+                                          ✓ Valider
+                                        </button>
+                                  )}
                                 </div>
-                                {a.id.startsWith("custom_") && (
-                                  validatedLines.has(a.id)
-                                    ? <span title="Budget validé" style={{fontSize:10,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 5px",flexShrink:0}}>✓ validé</span>
-                                    : <button onClick={()=>setConfirmModal({
-                                          msg:`Valider le budget de "${a.label}" à ${fmt(displayVal)} ? Ce montant sera transféré en budget validé et la ligne sera figée.`,
-                                          onConfirm:()=>{
-                                            // Transférer B1rev → B1 validé
-                                            setCapexData(prev=>prev.map(x=>x.id===a.id ? {...x, B1: displayVal} : x));
-                                            // Effacer le override B1rev
-                                            setOverrides(prev=>{
-                                              const next={...prev};
-                                              if(next[a.id]?.B1rev!==undefined){
-                                                const {B1rev,...rest}=next[a.id];
-                                                if(Object.keys(rest).length) next[a.id]=rest;
-                                                else delete next[a.id];
-                                              }
-                                              return next;
-                                            });
-                                            setValidatedLines(prev=>new Set([...prev,a.id]));
-                                            toast(`"${a.label}" — ${fmt(displayVal)} transféré en budget validé.`,"success");
-                                          }
-                                        })}
-                                        title="Valider et transférer en budget validé"
-                                        style={{fontSize:10,padding:"1px 6px",borderRadius:4,border:"0.5px solid #3A7A4A",
-                                          background:"#EAF3DE",color:"#27500A",cursor:"pointer",fontWeight:600,flexShrink:0,whiteSpace:"nowrap"}}>
-                                        ✓ Valider
-                                      </button>
-                                )}
+                                <Ghost bg="#fffbe0" /><Ghost bg="#fffbe0" />
                               </div>
                             : <><span style={{color:"#ccc",fontSize:11}}>—</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                       </td>
@@ -1214,19 +1215,22 @@ export default function App() {
                                 onKeyDown={e=>{if(e.key==="Enter")e.target.blur();if(e.key==="Escape")setEditing(null);}}
                                 style={{width:72,textAlign:"right",fontSize:12,padding:"2px 4px",border:"1px solid #185FA5",borderRadius:4,outline:"none"}} />
                             : dispVal!==null
-                              ? <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
-                                  onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
-                                  onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
-                                  <span style={{color:"#b05000",fontWeight:600}}>{fmt(dispVal)}</span>
-                                  {!hasOvr && col==="B2rev" && totalRep>0 && <>
-                                    <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
-                                    <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
-                                      width:200,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
-                                      fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
-                                      Budget validé {fmt(a[init])} + report {fmt(totalRep)}
-                                    </div>
-                                  </>}
-                                  {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
+                              ? <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                                  <div style={{position:"relative",display:"inline-flex",alignItems:"center",gap:4}}
+                                    onMouseEnter={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="block")}
+                                    onMouseLeave={e=>e.currentTarget.querySelector(".capex-tip")?.style&&(e.currentTarget.querySelector(".capex-tip").style.display="none")}>
+                                    <span style={{color:"#b05000",fontWeight:600}}>{fmt(dispVal)}</span>
+                                    {!hasOvr && col==="B2rev" && totalRep>0 && <>
+                                      <span style={{fontSize:11,color:"#c08030",cursor:"default"}}>ⓘ</span>
+                                      <div className="capex-tip" style={{display:"none",position:"absolute",right:"calc(100% + 6px)",top:"50%",transform:"translateY(-50%)",
+                                        width:200,background:"#fff",border:"0.5px solid #ddd",borderRadius:8,padding:"8px 10px",
+                                        fontSize:11,color:"#555",lineHeight:1.5,zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,.1)",whiteSpace:"normal",textAlign:"left"}}>
+                                        Budget validé {fmt(a[init])} + report {fmt(totalRep)}
+                                      </div>
+                                    </>}
+                                    {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
+                                  </div>
+                                  <Ghost bg="#fffbe0" /><Ghost bg="#fffbe0" />
                                 </div>
                               : <><span style={{color:"#ccc",fontSize:11}}>—</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                         </td>
