@@ -1021,14 +1021,14 @@ export default function App() {
               return [
                 <tr key={a.id} className="data-row">
                   {/* Chevron */}
-                  <td style={{padding:"8px 6px",borderBottom:"none",verticalAlign:"middle"}}>
+                  <td style={{padding:"8px 6px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <button onClick={()=>toggleExpand(a.id)}
                       style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",
                         color:"#aaa",fontSize:14,transform:expanded.has(a.id)?"rotate(90deg)":"none",
                         transition:"transform .15s",display:"inline-flex",alignItems:"center"}}>›</button>
                   </td>
                   {/* Label */}
-                  <TD style={{borderBottom:"none"}}>
+                  <TD style={{borderBottom:bbot}}>
                     <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
                       <div>
                         <strong>{a.label}</strong><br/>
@@ -1045,23 +1045,23 @@ export default function App() {
                     </div>
                   </TD>
                   {/* Clé */}
-                  <TD style={{borderBottom:"none"}}>
+                  <TD style={{borderBottom:bbot}}>
                     <span style={{display:"inline-block",fontSize:11,padding:"2px 6px",borderRadius:4,fontWeight:500,
                       background:a.type==="DTQ"?"#E6F1FB":"#EEEDFE",color:a.type==="DTQ"?"#0C447C":"#3C3489"}}>{a.type}</span>
                   </TD>
                   {/* Total validé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #444",color:"#555",fontWeight:500}}>
-                    {fmt(totalInit)}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #444",color:"#555",fontWeight:500}}>
+                    {fmt(totalInit)}<Ghost bg="#ffffff" /><Ghost bg="#ffffff" />
                   </td>
                   {/* Total révisé */}
-                  <td style={{textAlign:"right",padding:"4px 10px",borderBottom:"none",borderRight:"1px solid #444",
+                  <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,borderRight:"1px solid #444",
                     background: hasRowRev ? "#fffbe0" : "#fafaf8",
                     color: hasRowRev ? "#b05000" : "#ccc", fontWeight: hasRowRev ? 600 : 400}}>
-                    {hasRowRev ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}
+                    {hasRowRev ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}<Ghost bg="#fffbe0" /><Ghost bg="#fffbe0" />
                   </td>
                   {/* B1 initial */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #ddd",color:"#555"}}>
-                    {fmt(a.B1)}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#555"}}>
+                    {fmt(a.B1)}<Ghost bg="#ffffff" /><Ghost bg="#ffffff" />
                   </td>
                   {/* B1 révisé — toujours éditable */}
                   {(() => {
@@ -1084,7 +1084,7 @@ export default function App() {
                       return null;
                     };
                     return (
-                      <td style={{textAlign:"right",padding:"4px 10px",borderBottom:"none",
+                      <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,
                         background: isActive ? "#fffbe0" : "#fffef5",
                         cursor: isBlocked ? "default" : "pointer", fontWeight: isActive ? 600 : 400 }}
                         title={isBlocked ? "Révisé validé — non modifiable" : "Double-cliquez pour modifier — valeur de départ = Budget validé"}
@@ -1159,33 +1159,36 @@ export default function App() {
                     );
                   })()}
                   {/* OS engagés */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #b0d8b8",background:"#F0F7F2",color:"#185FA5"}}>
-                    {fmt(a.os_total)}<Ghost bg="#F0F7F2" />
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #b0d8b8",background:"#F0F7F2",color:"#185FA5"}}>
+                    {fmt(a.os_total)}<Ghost bg="#F0F7F2" /><Ghost bg="#F0F7F2" />
                   </td>
                   {/* Facturé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",background:"#F0F7F2"}}>
-                    {fmt(a.facture)}<Ghost bg="#F0F7F2" />
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#F0F7F2"}}>
+                    {fmt(a.facture)}<Ghost bg="#F0F7F2" /><Ghost bg="#F0F7F2" />
                   </td>
                   {/* FAR */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #d8b898",background:"#fdf5ee",verticalAlign:"middle"}}>
-                    {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}<Ghost bg="#fdf5ee" />
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee",verticalAlign:"middle"}}>
+                    {far>0?fmt(far):<span style={{color:"#ccc"}}>—</span>}<Ghost bg="#fdf5ee" /><Ghost bg="#fdf5ee" />
                   </td>
                   {/* Non engagé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",background:"#fdf5ee",verticalAlign:"middle"}}>
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,background:"#fdf5ee",verticalAlign:"middle"}}>
                     <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                       {!isBlocked && ne>0 && reports[a.id]?.rt==="ne" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
                       {!isBlocked && ne>0 && reports[a.id]?.rt!=="ne" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
                       {(isBlocked || !ne) && <Ghost bg="#fdf5ee" />}
+                      <Ghost bg="#fdf5ee" />
                     </div>
                   </td>
-                  {/* Non facturé */}
-                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",verticalAlign:"middle"}}>
+                  {/* Non facturé + 2026←→2027 */}
+                  <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle"}}>
                     <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       {nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}
                       {!isBlocked && nf>0 && reports[a.id]?.rt==="nf" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
                       {!isBlocked && nf>0 && reports[a.id]?.rt!=="nf" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
                       {(isBlocked || !nf) && <Ghost bg="#ffffff" />}
+                      {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
+                      {isBlocked && <Ghost bg="#ffffff" />}
                     </div>
                   </td>
                   {/* B2 à B5 initial + révisé */}
@@ -1197,7 +1200,7 @@ export default function App() {
                     return (
                       <>
                         <td key={init} style={{textAlign:"right",padding:"8px 10px",borderBottom:"none",borderLeft:"1px solid #ddd",color:"#888"}}>
-                          {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}
+                          {a[init]>0?fmt(a[init]):<span style={{color:"#ccc"}}>—</span>}<Ghost bg="#ffffff" /><Ghost bg="#ffffff" />
                         </td>
                         <td key={col} style={{padding:"4px 8px",borderBottom:"none",textAlign:"right",verticalAlign:"middle",
                           background:dispVal!==null?"#fffbe0":"#fffef5",
@@ -1255,26 +1258,6 @@ export default function App() {
                       )}
                     </div>
                   </td>
-                </tr>,
-
-                /* Ligne d'actions */
-                <tr key={a.id+"-actions"} style={{background:"inherit"}}>
-                  <td style={{padding:0,borderBottom:bbot}}></td>
-                  <td style={{padding:0,borderBottom:bbot}}></td>
-                  <td style={{padding:0,borderBottom:bbot}}></td>
-                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #444"}}></td>
-                  <td style={{padding:0,borderBottom:bbot,borderRight:"1px solid #444"}}></td>
-                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td>
-                  <td style={{padding:0,borderBottom:bbot}}></td>
-                  <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2",borderLeft:"1px solid #b0d8b8"}}></td>
-                  <td style={{padding:0,borderBottom:bbot,background:"#F0F7F2"}}></td>
-                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #d8b898",background:"#fdf5ee"}}></td>
-                  <td style={{padding:0,borderBottom:bbot,background:"#fdf5ee"}}></td>
-                  <td style={{padding:"2px 8px 4px",borderBottom:bbot,textAlign:"right",verticalAlign:"top"}}>
-                    {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
-                  </td>
-                  {[0,1,2,3,4].map(i=><React.Fragment key={i}><td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td><td style={{padding:0,borderBottom:bbot}}></td></React.Fragment>)}
-                  <td style={{padding:0,borderBottom:bbot,borderLeft:"1px solid #ddd"}}></td>
                 </tr>,
 
                 ...(expanded.has(a.id) ? a.os.map((o,oi)=>{
