@@ -1032,7 +1032,7 @@ export default function App() {
                     <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
                       <div>
                         <strong>{a.label}</strong><br/>
-                        <span style={{color:"#aaa",fontSize:11}}>{a.sub}</span><br/>
+                        <span style={{color:"#aaa",fontSize:11,whiteSpace:"nowrap"}}>{a.sub}</span><br/>
                         <span style={{color:"#bbb",fontSize:10}}>depuis {a.dateOuverture}</span>
                       </div>
                       {a.historique?.length > 0 && (
