@@ -871,7 +871,7 @@ export default function App() {
                           return next;
                         });
                       }
-                    });}}                    style={{fontSize:10,padding:"2px 8px",borderRadius:6,
+                    });}}                    style={{fontSize:9,padding:"1px 6px",borderRadius:5,
                       border: reviseValide?"1px solid #ccc":"1px solid #c08050",
                       background: reviseValide?"#f5f5f5":"#fff3e8",
                       color: reviseValide?"#ccc":"#8a4020",
@@ -1154,7 +1154,7 @@ export default function App() {
                                       </button>
                                 )}
                               </div>
-                            : <><span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
+                            : <><span style={{color:"#ccc",fontSize:11}}>—</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                       </td>
                     );
                   })()}
@@ -1227,7 +1227,7 @@ export default function App() {
                                   </>}
                                   {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
                                 </div>
-                              : <><span style={{color:"#ccc",fontSize:11}}>= {a[init]>0?fmt(a[init]):"—"}</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
+                              : <><span style={{color:"#ccc",fontSize:11}}>—</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                         </td>
                       </>
                     );
