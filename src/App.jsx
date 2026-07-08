@@ -1,8 +1,32 @@
 import { useState, useRef, useEffect } from "react";
 import React from "react";
 
-// AN(n) est recalculé dynamiquement depuis le state dateSimu dans App
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUIVI BUDGÉTAIRE CAPEX — Démo SNK / Soneka
+// ═══════════════════════════════════════════════════════════════════════════════
+// Architecture :
+//   • CAPEX_DATA   — données initiales (constante, jamais mutée directement)
+//   • capexData    — state dérivé de CAPEX_DATA, modifiable (clôture, ajout de ligne)
+//   • simData      — capexData avec E et F simulés selon la date courante (lecture seule)
+//   • reports      — {id: {report, rt}} — montants et types de reports décidés par l'user
+//   • overrides    — {id: {B1rev, B2rev...}} — saisies manuelles sur les colonnes Révisé
+//   • reviseValide — boolean — fige toutes les colonnes Révisé (validation globale)
+//   • validatedLines — Set d'ids — fige ligne par ligne (lignes custom uniquement)
+//
+// Années : AN(0) = année courante, AN(1) = N+1 ... AN(5) = N+5
+//          Toutes calculées dynamiquement depuis dateSimu.
+// ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── Données initiales ───────────────────────────────────────────────────────
+// Structure d'une opération CAPEX :
+//   id, label, sub, type (DTQ=Détérioration/Qualité | DEV=Développement/Valorisation)
+//   dateOuverture : année d'ouverture du budget
+//   historique    : [{annee, B1, os_total, facture}] — archives des exercices passés
+//   budget        : montant EVEN de l'année (engagements constatés côté comptabilité)
+//   os_total      : total des OS engagés sur l'année courante
+//   facture       : total facturé comptabilisé
+//   B1..B6        : budgets validés pluriannuels (B1=année courante, B2=N+1...)
+//   os            : [{id, label, montant, facture, statut}] — ordres de service ouverts
 const CAPEX_DATA = [
   { id:"pac",    label:"Remplacement PAC",                   sub:"CVC · Génie climatique",         type:"DTQ",
     dateOuverture:2024,
@@ -91,6 +115,7 @@ const CAPEX_DATA = [
     os:[{id:"os084",label:"Isolation combles + remplacement fenêtres", montant:120000,facture:60000, statut:"cours"}]},
 ];
 
+// ─── Textes d'aide pour les infobulles du menu de report ─────────────────────
 const TIPS = {
   full:     "Reporter l'intégralité du budget 2026 sur 2027. Disponible uniquement si aucun OS n'a été ouvert sur cette opération.",
   ne:       "Reporter sur 2027 le budget sans OS : solde budgétaire non couvert par un ordre de service (NE = B1 − E).",
@@ -101,19 +126,29 @@ const TIPS = {
   reset:    "Annuler toutes les actions de report sur cette ligne.",
 };
 
+// ─── Fonctions de calcul ──────────────────────────────────────────────────────
+// FAR par OS  : Factures À Recevoir = montant engagé − facturé (juridiquement dû)
 const calcFar  = (o) => Math.max(0, o.montant - o.facture);
+// FAR total   : somme des FAR sur tous les OS d'une opération
 const calcTfar = (a) => a.os.reduce((s,o) => s+calcFar(o), 0);
-const calcNE   = (a) => Math.max(0, a.B1 - a.os_total);           // NE = B1 − E
-const calcNF   = (a) => Math.max(0, a.B1 - a.facture);            // NF = B1 − F
-const calcBmf  = (a) => Math.max(0, a.B1 - a.facture);   // NF = plafond saisie manuelle
+// NE          : Non Engagé = B1 − E (budget sans OS ouvert)
+const calcNE   = (a) => Math.max(0, a.B1 - a.os_total);
+// NF          : Non Facturé = B1 − F (budget non encore comptabilisé, inclut FAR + NE)
+const calcNF   = (a) => Math.max(0, a.B1 - a.facture);
+// Plafond saisie manuelle = NF (on ne peut pas reporter plus que le non facturé)
+const calcBmf  = (a) => Math.max(0, a.B1 - a.facture);
+// Formateur monétaire français
 const fmt = (n) => n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
 
+// Calcule le montant total reporté sur une opération (ligne + OS).
+// Utilisé pour dériver B1' (réduit) et B2' (augmenté) automatiquement.
 function calcTotalReport(a, reports) {
   const ar  = reports[a.id]?.report || 0;
   const osr = a.os.reduce((s,o) => s+(reports[o.id]?.report||0), 0);
   return ar + osr;
 }
 
+// Alias identique — conservé pour clarté sémantique dans les calculs B2'
 function calcTotalReportB2(a, reports) {
   return calcTotalReport(a, reports);
 }
@@ -326,6 +361,15 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
   );
 }
 
+// ─── Bouton fantôme (Ghost) ───────────────────────────────────────────────────
+// Rôle ESTHÉTIQUE UNIQUEMENT : force toutes les cellules du tableau à avoir
+// la même hauteur, quelle que soit la présence ou non de boutons d'action.
+// Invisible (texte, fond et bordure de la même couleur que la cellule),
+// non cliquable (pointerEvents:"none"), non sélectionnable (userSelect:"none").
+// Chaque cellule sans bouton reçoit autant de Ghost que la cellule la plus haute
+// de sa ligne en a de boutons réels — actuellement 2 (→ 2027 + → 2026/2027).
+// Sans ces Ghost, les montants des différentes colonnes ne seraient pas alignés
+// horizontalement car les cellules NE/NF ont 2 niveaux de boutons sous le montant.
 const Ghost = ({bg}) => <span style={{display:"block",fontSize:9,padding:"1px 6px",borderRadius:4,border:`0.5px solid ${bg}`,background:bg,color:bg,userSelect:"none",pointerEvents:"none",marginTop:3}}>·</span>;
 
 const TD = ({children, right, style={}}) => (
@@ -481,21 +525,22 @@ function ArbitrageModal({ lignes, AN, fmt, onIgnore, onClose, onApply }) {
 }
 
 export default function App() {
-  const [expanded, setExpanded]   = useState(new Set());
-  const [expandedHisto, setExpandedHisto] = useState(new Set());
-  const [reports,  setReports]    = useState({});
-  const [toastMsg, setToastMsg]   = useState(null);
-  const [overrides,setOverrides]  = useState({});
-  const [editing,  setEditing]    = useState(null);
-  const [comments, setComments]   = useState({});
-  const [confirmModal, setConfirmModal] = useState(null);
-  const [arbitrageModal, setArbitrageModal] = useState(null); // {lignes: [{id, label, Bx}], year, col}
-  const [dateSimu, setDateSimu]   = useState("2026-09-30");
-  const [capexData, setCapexData] = useState(CAPEX_DATA); // données modifiables
-  const [reviseValide, setReviseValide] = useState(false);
-  const [validatedLines, setValidatedLines] = useState(new Set());
-  const [addLineModal, setAddLineModal] = useState(false); // ids des lignes validées individuellement // révisé figé ?
-  const theadRef = useRef(null);
+  // ─── States ─────────────────────────────────────────────────────────────────
+  const [expanded, setExpanded]   = useState(new Set());         // ids des lignes expandées (OS visibles)
+  const [expandedHisto, setExpandedHisto] = useState(new Set()); // ids des lignes avec historique visible
+  const [reports,  setReports]    = useState({});                 // reports décidés : {id: {report, rt}}
+  const [toastMsg, setToastMsg]   = useState(null);              // message toast temporaire
+  const [overrides,setOverrides]  = useState({});                 // saisies manuelles Révisé : {id: {B1rev...}}
+  const [editing,  setEditing]    = useState(null);              // cellule en cours d'édition : {id, col}
+  const [comments, setComments]   = useState({});                 // commentaires libres par opération
+  const [confirmModal, setConfirmModal] = useState(null);         // modale de confirmation générique
+  const [arbitrageModal, setArbitrageModal] = useState(null);     // modale budgets non arbitrés à la validation
+  const [dateSimu, setDateSimu]   = useState("2026-09-30");      // date pilotant AN(0) et la simulation E/F
+  const [capexData, setCapexData] = useState(CAPEX_DATA);        // données modifiables (clôture, lignes ajoutées)
+  const [reviseValide, setReviseValide] = useState(false);        // true = toutes les colonnes Révisé figées
+  const [validatedLines, setValidatedLines] = useState(new Set()); // ids des lignes custom validées individuellement
+  const [addLineModal, setAddLineModal] = useState(false);        // affichage modale ajout d'opération
+  const theadRef = useRef(null); // référence thead pour sticky headers
 
   useEffect(() => {
     const applySticky = () => {
@@ -521,6 +566,12 @@ export default function App() {
   const AN = (n) => anneeRef + n;
 
   // Coefficient d'avancement dans l'année (0 = 1er jan, 1 = 31 déc)
+  // ─── Simulation temporelle ────────────────────────────────────────────────────
+  // E et F progressent selon une courbe logarithmique au fil de l'année :
+  // rapide en début d'année, asymptotique vers le budget sans jamais l'atteindre.
+  // E (OS engagés) progresse plus vite que F (facturé) car on engage avant de facturer.
+  // Au 1er janvier : E = F = 0 (reset de début d'exercice).
+  // Les lignes sans OS ne sont pas simulées (E et F restent à 0).
   const simDate  = new Date(dateSimu);
   const simMois  = simDate.getMonth(); // 0-11
   const simJour  = simDate.getDate();
@@ -562,7 +613,12 @@ export default function App() {
   const toast = (msg,type) => { setToastMsg({msg,type}); setTimeout(()=>setToastMsg(null),4000); };
   const toggleExpand = id => setExpanded(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
 
-  // Totaux
+  // ─── Totaux ───────────────────────────────────────────────────────────────────
+  // Les totaux "rev" n'agrègent que les lignes ayant fait l'objet d'une révision
+  // explicite (report ou saisie manuelle). Les lignes non arbitrées n'y contribuent
+  // pas, même si leur budget validé est non nul — c'est voulu pour que l'utilisateur
+  // voit clairement ce qu'il a décidé vs ce qui reste à arbitrer.
+  // La modale "⚠️ Budgets non arbitrés" (à la validation) joue le rôle de filet.
   const totBudget  = capexData.reduce((s,a)=>s+a.budget,0);
   const totOS      = simData.reduce((s,a)=>s+a.os_total,0);
   const totFac     = simData.reduce((s,a)=>s+a.facture,0);
