@@ -559,7 +559,9 @@ export default function App() {
         row.querySelectorAll("th").forEach(th => {
           th.style.position = "sticky";
           th.style.top = top + "px";
-          th.style.zIndex = "20";
+          // Conserver le left:0 des colonnes d'identification figées horizontalement
+          if (!th.style.left) th.style.left = "";
+          th.style.zIndex = th.style.left === "0px" ? "31" : "20";
           th.style.background = th.style.background || "inherit";
         });
         top += row.getBoundingClientRect().height;
@@ -858,7 +860,7 @@ export default function App() {
           <thead ref={theadRef}>
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
-              <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.15)", minWidth:320, width:320 }}>Identification</th>
+              <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.15)", minWidth:400, width:400 }}>Identification</th>
               <th colSpan={2} style={{ ...thG, color:"#fff", background:"#2a2a26", borderLeft:"1px solid #444", borderRight:"1px solid #444" }}>Total {AN(0)}→{AN(5)}</th>
               <th colSpan={7} style={{ ...thG, color:"#fff", background:"#2a5a8a", borderLeft:"1px solid #d0d8e8" }}>{AN(0)}</th>
               {[1,2,3,4,5].map(i => (
@@ -869,7 +871,7 @@ export default function App() {
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
               {/* identification couverte par rowSpan=2 de la ligne 1 */}
-              <th colSpan={3} style={{ background:"#f5f5f0", borderLeft:"none", borderBottom:"none", position:"sticky", left:0, zIndex:31, minWidth:320, width:320, padding:0, height:0, lineHeight:0, overflow:"hidden" }}></th>
+              <th colSpan={3} style={{ background:"#f5f5f0", borderLeft:"none", borderBottom:"none", position:"sticky", left:0, zIndex:31, minWidth:400, width:400, padding:0, height:0, lineHeight:0, overflow:"hidden" }}></th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
                   <span>Budget pluriannuel</span>
@@ -991,7 +993,7 @@ export default function App() {
             </tr>
             {/* Ligne 3 : colonnes */}
             <tr style={{ background:"#f5f5f0" }}>
-              <th colSpan={3} style={{ background:"#f5f5f0", position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.08)", minWidth:320, width:320, padding:"3px 8px", border:"none" }}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#888",fontWeight:500}}>Opération / OS</span><span style={{fontSize:11,color:"#888",fontWeight:500}}>Clé</span></div></th>
+              <th colSpan={3} style={{ background:"#f5f5f0", position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.08)", minWidth:400, width:400, padding:"3px 8px", border:"none" }}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#888",fontWeight:500}}>Opération / OS</span><span style={{fontSize:11,color:"#888",fontWeight:500}}>Clé</span></div></th>
               {/* Total pluriannuel */}
               <th style={{ ...thS, textAlign:"right", width:110, borderLeft:"1px solid #444" }}>
                 <span style={{ color:"#bbb", fontSize:10 }}>B1+…+B6</span><br/>Validé
