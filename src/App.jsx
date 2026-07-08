@@ -852,23 +852,13 @@ export default function App() {
         .capex-table td, .capex-table th { border-bottom: 0.5px solid #eee; }
         .capex-table tbody tr.data-row td { height: 56px; vertical-align: middle; }
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
-
-        /* Zone d'identification figée : les 3 premières colonnes sont sticky individuellement */
-        .sticky-col { position: sticky !important; z-index: 11; }
-        .capex-col-0 { left: 0px; }
-        .capex-col-1 { left: 32px; }
-        .capex-col-2 { left: 212px; box-shadow: 3px 0 8px rgba(0,0,0,0.08); }
-        .capex-table thead .sticky-col { z-index: 31; }
-        .capex-table tbody tr.capex-sticky-total .sticky-col { z-index: 20; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
         <table className="capex-table" style={{ width:"100%", fontSize:13, minWidth:1800 }}>
           <thead ref={theadRef}>
             {/* Ligne 1 : groupes année */}
             <tr style={{ background:"#2a5a8a", color:"#fff", textAlign:"center" }}>
-              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, width:32 }} className="sticky-col capex-col-0"></th>
-              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, minWidth:180 }} className="sticky-col capex-col-1">Identification</th>
-              <th style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", width:58 }} className="sticky-col capex-col-2"></th>
+              <th colSpan={3} style={{ ...thG, color:"#fff", background:"#1a1a18", borderLeft:"none", textAlign:"left", paddingLeft:12, position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.15)" }}>Identification</th>
               <th colSpan={2} style={{ ...thG, color:"#fff", background:"#2a2a26", borderLeft:"1px solid #444", borderRight:"1px solid #444" }}>Total {AN(0)}→{AN(5)}</th>
               <th colSpan={7} style={{ ...thG, color:"#fff", background:"#2a5a8a", borderLeft:"1px solid #d0d8e8" }}>{AN(0)}</th>
               {[1,2,3,4,5].map(i => (
@@ -878,9 +868,7 @@ export default function App() {
             </tr>
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
-              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", width:32 }} className="sticky-col capex-col-0"></th>
-              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", minWidth:180 }} className="sticky-col capex-col-1"></th>
-              <th style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", width:58 }} className="sticky-col capex-col-2"></th>
+              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none", position:"sticky", left:0, zIndex:31, boxShadow:"3px 0 8px rgba(0,0,0,0.08)" }}></th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
                   <span>Budget pluriannuel</span>
@@ -1002,9 +990,12 @@ export default function App() {
             </tr>
             {/* Ligne 3 : colonnes */}
             <tr style={{ background:"#f5f5f0" }}>
-              <th style={{ ...thS, width:32 }} className="sticky-col capex-col-0"></th>
-              <th style={{ ...thS, minWidth:180 }} className="sticky-col capex-col-1">Opération / OS</th>
-              <th style={{ ...thS, width:58 }} className="sticky-col capex-col-2">Clé</th>
+              <th colSpan={3} style={{ ...thS, position:"sticky", left:0, zIndex:31, background:"#f5f5f0", boxShadow:"3px 0 8px rgba(0,0,0,0.08)", padding:0 }}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 8px"}}>
+                  <span>Opération / OS</span>
+                  <span>Clé</span>
+                </div>
+              </th>
               {/* Total pluriannuel */}
               <th style={{ ...thS, textAlign:"right", width:110, borderLeft:"1px solid #444" }}>
                 <span style={{ color:"#bbb", fontSize:10 }}>B1+…+B6</span><br/>Validé
@@ -1095,37 +1086,36 @@ export default function App() {
 
               return [
                 <tr key={a.id} className="data-row">
-                  {/* Chevron */}
-                  <td style={{padding:"8px 6px",borderBottom:bbot,verticalAlign:"middle",background:"#fff"}} className="sticky-col capex-col-0">
-                    <button onClick={()=>toggleExpand(a.id)}
-                      style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",
-                        color:"#aaa",fontSize:14,transform:expanded.has(a.id)?"rotate(90deg)":"none",
-                        transition:"transform .15s",display:"inline-flex",alignItems:"center"}}>›</button>
-                  </td>
-                  {/* Label */}
-                  <td style={{padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",background:"#fff"}} className="sticky-col capex-col-1">
-                    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
-                      <div>
-                        <strong>{a.label}</strong><br/>
-                        <span style={{color:"#aaa",fontSize:11,whiteSpace:"nowrap"}}>{a.sub}</span><br/>
-                        <span style={{display:"inline-block",fontSize:10,padding:"1px 6px",borderRadius:4,fontWeight:500,
-                          background:"#f0f0ee",color:"#888",border:"0.5px solid #ddd",marginTop:2}}>
-                          depuis {a.dateOuverture}
-                        </span>
+                  {/* Identification — figée au scroll horizontal */}
+                  <td colSpan={3} style={{padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",background:"#fff",
+                    position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.08)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <button onClick={()=>toggleExpand(a.id)}
+                        style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",flexShrink:0,
+                          color:"#aaa",fontSize:14,transform:expanded.has(a.id)?"rotate(90deg)":"none",
+                          transition:"transform .15s",display:"inline-flex",alignItems:"center"}}>›</button>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:4}}>
+                          <div>
+                            <strong>{a.label}</strong><br/>
+                            <span style={{color:"#aaa",fontSize:11,whiteSpace:"nowrap"}}>{a.sub}</span><br/>
+                            <span style={{display:"inline-block",fontSize:10,padding:"1px 6px",borderRadius:4,fontWeight:500,
+                              background:"#f0f0ee",color:"#888",border:"0.5px solid #ddd",marginTop:2}}>
+                              depuis {a.dateOuverture}
+                            </span>
+                          </div>
+                          {a.historique?.length > 0 && (
+                            <button onClick={()=>setExpandedHisto(prev=>{const n=new Set(prev);n.has(a.id)?n.delete(a.id):n.add(a.id);return n;})}
+                              style={{background:"none",border:"0.5px solid #c0c8e0",borderRadius:4,cursor:"pointer",
+                                padding:"1px 5px",fontSize:10,color:"#7090CC",whiteSpace:"nowrap",flexShrink:0,marginTop:2}}>
+                              {expandedHisto.has(a.id)?"▲ Histo":"▼ Histo"} ({a.historique.length})
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {a.historique?.length > 0 && (
-                        <button onClick={()=>setExpandedHisto(prev=>{const n=new Set(prev);n.has(a.id)?n.delete(a.id):n.add(a.id);return n;})}
-                          style={{background:"none",border:"0.5px solid #c0c8e0",borderRadius:4,cursor:"pointer",
-                            padding:"1px 5px",fontSize:10,color:"#7090CC",whiteSpace:"nowrap",flexShrink:0,marginTop:2}}>
-                          {expandedHisto.has(a.id)?"▲ Histo":"▼ Histo"} ({a.historique.length})
-                        </button>
-                      )}
+                      <span style={{display:"inline-block",fontSize:11,padding:"2px 6px",borderRadius:4,fontWeight:500,flexShrink:0,
+                        background:a.type==="DTQ"?"#E6F1FB":"#EEEDFE",color:a.type==="DTQ"?"#0C447C":"#3C3489"}}>{a.type}</span>
                     </div>
-                  </td>
-                  {/* Clé */}
-                  <td style={{padding:"8px 10px",borderBottom:bbot,verticalAlign:"middle",background:"#fff"}} className="sticky-col capex-col-2">
-                    <span style={{display:"inline-block",fontSize:11,padding:"2px 6px",borderRadius:4,fontWeight:500,
-                      background:a.type==="DTQ"?"#E6F1FB":"#EEEDFE",color:a.type==="DTQ"?"#0C447C":"#3C3489"}}>{a.type}</span>
                   </td>
                   {/* Total validé */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #444",color:"#555",fontWeight:500}}>
@@ -1351,17 +1341,14 @@ export default function App() {
                   return (
                     <tr key={o.id} style={{background:"#f7f7f5"}}>
                       {/* chevron */}
-                      <td style={{padding:"6px 10px",borderBottom:bsep,background:"#f7f7f5"}} className="sticky-col capex-col-0"></td>
-                      {/* Opération */}
-                      <td style={{padding:"6px 10px",borderBottom:bsep,fontSize:12,background:"#f7f7f5"}} className="sticky-col capex-col-1">
+                      <td colSpan={3} style={{padding:"6px 10px",borderBottom:bsep,fontSize:12,background:"#f7f7f5",
+                        position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.06)"}}>
                         <span style={{color:"#ccc",marginRight:4}}>↳</span>
                         <strong>{o.id.toUpperCase()}</strong>
                         <span style={{display:"inline-block",fontSize:10,padding:"1px 6px",borderRadius:3,marginLeft:6,
                           background:statBadge.bg,color:statBadge.c,fontWeight:600}}>{statBadge.l}</span>
                         <br/><span style={{color:"#aaa",fontSize:11}}>{o.label}</span>
                       </td>
-                      {/* Clé */}
-                      <td style={{padding:"6px 10px",borderBottom:bsep,background:"#f7f7f5"}} className="sticky-col capex-col-2"></td>
                       {/* Total validé/révisé — vide pour OS */}
                       {td(null,{borderLeft:"1px solid #444"})}
                       {td(null,{background:"#fafaf8",borderRight:"1px solid #444"})}
@@ -1411,13 +1398,12 @@ export default function App() {
                   const nbCols = 16; // B2→B6 = 10 + commentaire + 5 autres
                   return (
                     <tr key={`histo-${a.id}-${h.annee}`} style={{background:"#f0f0f8"}}>
-                      <td style={{padding:"5px 6px",borderBottom:bsepH}}></td>
-                      <td style={{padding:"5px 10px",borderBottom:bsepH,fontSize:11,color:"#666"}}>
+                      <td colSpan={3} style={{padding:"5px 10px",borderBottom:bsepH,fontSize:11,color:"#666",
+                        background:"#f0f0f8",position:"sticky",left:0,zIndex:11,boxShadow:"3px 0 8px rgba(0,0,0,0.06)"}}>
                         <span style={{color:"#aaa",marginRight:4}}>📅</span>
                         <strong style={{color:"#185FA5"}}>{h.annee}</strong>
                         <span style={{color:"#aaa",fontSize:10,marginLeft:6}}>historique</span>
                       </td>
-                      <td style={{padding:"5px 6px",borderBottom:bsepH}}></td>
                       {/* Total validé historique */}
                       <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,borderLeft:"1px solid #444",color:"#555",fontSize:11}}>{fmt(h.B1)}</td>
                       <td style={{textAlign:"right",padding:"5px 10px",borderBottom:bsepH,color:"#aaa",fontSize:11}}>—</td>
@@ -1442,9 +1428,8 @@ export default function App() {
 
             {/* Ligne total — flottante */}
             <tr className="capex-sticky-total" style={{fontWeight:500, color:"#fff", borderTop:"1px solid #555", boxShadow:"0 -2px 8px rgba(0,0,0,0.25)"}}>
-              <td style={{borderBottom:"none",padding:"9px 6px", background:"#1a1a18"}} className="sticky-col capex-col-0"></td>
-              <td style={{padding:"9px 10px",borderBottom:"none",fontWeight:700,fontSize:14, background:"#1a1a18"}} className="sticky-col capex-col-1">Total</td>
-              <td style={{borderBottom:"none",padding:"9px 6px", background:"#1a1a18"}} className="sticky-col capex-col-2"></td>
+              <td colSpan={3} style={{padding:"9px 10px",borderBottom:"none",fontWeight:700,fontSize:14,background:"#1a1a18",
+                position:"sticky",left:0,zIndex:20,boxShadow:"3px 0 8px rgba(0,0,0,0.2)"}}>Total</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",borderLeft:"1px solid #444",background:"#1e2a38",color:"#fff",fontWeight:600}}>{fmt(totInitial)}</td>
               <td style={{textAlign:"right",padding:"9px 10px",borderBottom:"none",background:"#2a2800",color:"#ffd",fontWeight:600,borderRight:"1px solid #444"}}>
                 {hasAnyRev?fmt(totRevise):<span style={{color:"#666"}}>—</span>}
