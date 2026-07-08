@@ -856,13 +856,7 @@ export default function App() {
             </tr>
             {/* Ligne 2 : sous-groupes */}
             <tr style={{ background:"#e8eff8", textAlign:"center" }}>
-              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}>
-                <button onClick={()=>setAddLineModal(true)}
-                  style={{fontSize:11,padding:"3px 10px",borderRadius:6,border:"0.5px solid #185FA5",
-                    background:"#E6F1FB",color:"#0C447C",cursor:"pointer",fontWeight:600}}>
-                  + Ajouter une opération
-                </button>
-              </th>
+              <th colSpan={3} style={{ ...thG, color:"#555", background:"#f0f0ee", borderLeft:"none" }}></th>
               <th colSpan={2} style={{ ...thG, color:"#555", background:"#f0f0e4", borderLeft:"1px solid #444", borderRight:"1px solid #444", fontSize:11 }}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
                   <span>Budget pluriannuel</span>
@@ -1452,6 +1446,23 @@ export default function App() {
           </tbody>
         </table>
       </div>
+
+      {/* FAB — bouton flottant d'ajout d'opération, toujours visible même au scroll */}
+      <button
+        onClick={()=>setAddLineModal(true)}
+        title="Ajouter une opération CAPEX"
+        style={{
+          position:"fixed", bottom:28, right:32, zIndex:999,
+          width:52, height:52, borderRadius:"50%",
+          background:"#185FA5", color:"#fff",
+          border:"none", cursor:"pointer",
+          fontSize:26, fontWeight:300, lineHeight:1,
+          boxShadow:"0 4px 16px rgba(24,95,165,0.35)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 6px 20px rgba(24,95,165,0.45)";}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 16px rgba(24,95,165,0.35)";}}
+      >+</button>
 
     </div>
   );
