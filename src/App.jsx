@@ -105,7 +105,7 @@ const calcFar  = (o) => Math.max(0, o.montant - o.facture);
 const calcTfar = (a) => a.os.reduce((s,o) => s+calcFar(o), 0);
 const calcNE   = (a) => Math.max(0, a.B1 - a.os_total);           // NE = B1 − E
 const calcNF   = (a) => Math.max(0, a.B1 - a.facture);            // NF = B1 − F
-const calcBmf  = (a) => Math.max(0, a.budget - a.facture);        // Budget N − Facturé (pour plafond saisie manuelle)
+const calcBmf  = (a) => Math.max(0, a.B1 - a.facture);   // NF = plafond saisie manuelle
 const fmt = (n) => n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
 
 function calcTotalReport(a, reports) {
