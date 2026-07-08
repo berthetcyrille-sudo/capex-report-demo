@@ -1057,7 +1057,7 @@ export default function App() {
                   <td style={{textAlign:"right",padding:"4px 10px",borderBottom:bbot,borderRight:"1px solid #444",
                     background: hasRowRev ? "#fffbe0" : "#fafaf8",
                     color: hasRowRev ? "#b05000" : "#ccc", fontWeight: hasRowRev ? 600 : 400}}>
-                    {hasRowRev ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}<Ghost bg="#fffbe0" /><Ghost bg="#fffbe0" />
+                    {hasRowRev ? fmt(totalRev) : <span style={{color:"#ccc"}}>—</span>}<Ghost bg={hasRowRev?"#fffbe0":"#fafaf8"} /><Ghost bg={hasRowRev?"#fffbe0":"#fafaf8"} />
                   </td>
                   {/* B1 initial */}
                   <td style={{textAlign:"right",padding:"8px 10px",borderBottom:bbot,borderLeft:"1px solid #ddd",color:"#555"}}>
@@ -1154,7 +1154,7 @@ export default function App() {
                                       </button>
                                 )}
                               </div>
-                            : <span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span>}
+                            : <><span style={{color:"#ccc",fontSize:11}}>= {fmt(a.B1)}</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                       </td>
                     );
                   })()}
@@ -1227,7 +1227,7 @@ export default function App() {
                                   </>}
                                   {hasOvr && <span style={{fontSize:9,color:"#c08030"}}>✎</span>}
                                 </div>
-                              : <span style={{color:"#ccc",fontSize:11}}>= {a[init]>0?fmt(a[init]):"—"}</span>}
+                              : <><span style={{color:"#ccc",fontSize:11}}>= {a[init]>0?fmt(a[init]):"—"}</span><Ghost bg="#fffef5" /><Ghost bg="#fffef5" /></>}
                         </td>
                       </>
                     );
