@@ -853,19 +853,13 @@ export default function App() {
         .capex-table tbody tr.data-row td { height: 56px; vertical-align: middle; }
         .capex-table tbody tr.capex-sticky-total td { position: sticky; bottom: 0; z-index: 9; }
 
-        /* Colonnes d'identification figées au scroll horizontal */
-        /* Col 0 = chevron (32px), Col 1 = label (180px), Col 2 = clé (58px) */
-        .capex-table th.sticky-col,
-        .capex-table td.sticky-col { position: sticky; z-index: 10; }
-        .capex-col-0 { left: 0px; min-width:32px; max-width:32px; }
-        .capex-col-1 { left: 32px; min-width:180px; }
-        .capex-col-2 { left: 212px; min-width:58px; max-width:58px; border-right: 1px solid #e0e0e0 !important; }
-        /* Ombre portée à droite de la dernière colonne figée */
-        .capex-table td.capex-col-2,
-        .capex-table th.capex-col-2 { box-shadow: 3px 0 8px rgba(0,0,0,0.08); }
-
-        /* Dans le thead, z-index plus élevé pour passer au-dessus du tbody sticky */
-        .capex-table thead th.sticky-col { z-index: 30; }
+        /* Zone d'identification figée : les 3 premières colonnes sont sticky individuellement */
+        .sticky-col { position: sticky !important; z-index: 11; }
+        .capex-col-0 { left: 0px; }
+        .capex-col-1 { left: 32px; }
+        .capex-col-2 { left: 212px; box-shadow: 3px 0 8px rgba(0,0,0,0.08); }
+        .capex-table thead .sticky-col { z-index: 31; }
+        .capex-table tbody tr.capex-sticky-total .sticky-col { z-index: 20; }
       `}</style>
       <div style={{ background:"#fff", border:"0.5px solid #eee", borderRadius:12, overflowX:"auto", overflowY:"auto", maxHeight:"75vh" }}>
         <table className="capex-table" style={{ width:"100%", fontSize:13, minWidth:1800 }}>
