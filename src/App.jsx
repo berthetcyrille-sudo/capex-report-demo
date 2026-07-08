@@ -289,7 +289,8 @@ function CtxMenu({ a, reports, setReports, setOverrides, toast, AN, disabled }) 
           background: disabled?"#f5f5f5":"#fff3e8",
           color: disabled?"#ccc":"#8a4020",
           cursor:disabled?"default":"pointer", fontWeight:600,
-          opacity: disabled?0.5:1, whiteSpace:"nowrap" }}>→ {AN(0)}/{AN(1)}</button>
+          opacity: disabled?0.5:1, whiteSpace:"nowrap" }}
+        title={`Report partiel sur ${AN(1)} — saisir manuellement le montant à reporter ou à conserver`}>→ {AN(0)}/{AN(1)}</button>
       {open && (
         <>
           <div onClick={()=>{setOpen(false);setShowManu(false);setShowConserve(false);}}
@@ -1175,7 +1176,7 @@ export default function App() {
                     <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       {ne>0?fmt(ne):<span style={{color:"#ccc"}}>0 €</span>}
                       {!isBlocked && ne>0 && reports[a.id]?.rt==="ne" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
-                      {!isBlocked && ne>0 && reports[a.id]?.rt!=="ne" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
+                      {!isBlocked && ne>0 && reports[a.id]?.rt!=="ne" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:ne,rt:"ne"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} title={`Reporter le budget non engagé (NE = B1 − E) sur ${AN(1)} : ${fmt(ne)}\nB1' sera réduit d'autant, B2' augmentera en conséquence.`} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
                       {(isBlocked || !ne) && <Ghost bg="#fdf5ee" />}
                       <Ghost bg="#fdf5ee" />
                     </div>
@@ -1185,7 +1186,7 @@ export default function App() {
                     <div style={{display:"inline-flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
                       {nf>0?fmt(nf):<span style={{color:"#ccc"}}>—</span>}
                       {!isBlocked && nf>0 && reports[a.id]?.rt==="nf" && <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}} onClick={()=>setReports(prev=>{const next={...prev};delete next[a.id];return next;})}>→ {AN(1)} ✕</span>}
-                      {!isBlocked && nf>0 && reports[a.id]?.rt!=="nf" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
+                      {!isBlocked && nf>0 && reports[a.id]?.rt!=="nf" && <button onClick={()=>{setReports(prev=>({...prev,[a.id]:{report:nf,rt:"nf"}}));setOverrides(prev=>{const next={...prev};if(next[a.id]?.B1rev!==undefined){const {B1rev,...rest}=next[a.id];if(Object.keys(rest).length)next[a.id]=rest;else delete next[a.id];}return next;});}} title={`Reporter tout le budget non facturé (NF = B1 − F) sur ${AN(1)} : ${fmt(nf)}\nB1' sera réduit d'autant, B2' augmentera en conséquence.`} style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>}
                       {(isBlocked || !nf) && <Ghost bg="#ffffff" />}
                       {!isBlocked && <CtxMenu a={a} reports={reports} setReports={setReports} setOverrides={setOverrides} toast={toast} AN={AN} disabled={reviseValide||validatedLines.has(a.id)} />}
                       {isBlocked && <Ghost bg="#ffffff" />}
@@ -1304,6 +1305,7 @@ export default function App() {
                                 ? <span style={{fontSize:9,color:"#27500A",background:"#EAF3DE",border:"0.5px solid #c0dd97",borderRadius:4,padding:"1px 6px",cursor:"pointer"}}
                                     onClick={()=>setReports(prev=>{const next={...prev};delete next[o.id];return next;})}>→ {AN(1)} ✕</span>
                                 : <button onClick={()=>setReports(prev=>({...prev,[o.id]:{report:f,rt:"far"}}))}
+                                    title={`Reporter les Factures À Recevoir de cet OS sur ${AN(1)} : ${fmt(f)}\nFAR = Engagé − Facturé. B2' augmentera d'autant.`}
                                     style={{fontSize:9,padding:"1px 6px",borderRadius:4,border:"0.5px solid #d8b898",background:"#fff3e8",color:"#8a4020",cursor:"pointer",fontWeight:600}}>→ {AN(1)}</button>
                               )}
                             </div>
