@@ -1452,7 +1452,7 @@ export default function App() {
         onClick={()=>setAddLineModal(true)}
         title="Ajouter une opération CAPEX"
         style={{
-          position:"fixed", bottom:28, right:32, zIndex:999,
+          position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)", zIndex:999,
           width:52, height:52, borderRadius:"50%",
           background:"#185FA5", color:"#fff",
           border:"none", cursor:"pointer",
@@ -1460,8 +1460,8 @@ export default function App() {
           boxShadow:"0 4px 16px rgba(24,95,165,0.35)",
           display:"flex", alignItems:"center", justifyContent:"center",
         }}
-        onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 6px 20px rgba(24,95,165,0.45)";}}
-        onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 16px rgba(24,95,165,0.35)";}}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateX(-50%) scale(1.1)";e.currentTarget.style.boxShadow="0 6px 20px rgba(24,95,165,0.45)";}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="translateX(-50%) scale(1)";e.currentTarget.style.boxShadow="0 4px 16px rgba(24,95,165,0.35)";}}
       >+</button>
 
     </div>
